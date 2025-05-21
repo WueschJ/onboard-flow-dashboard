@@ -2,6 +2,7 @@
 import React from 'react';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface KanbanLaneProps {
   title: string;
@@ -31,9 +32,11 @@ const KanbanLane: React.FC<KanbanLaneProps> = ({
           </Button>
         )}
       </div>
-      <div className="flex-1 p-4 overflow-y-auto space-y-3 min-h-[300px]">
-        {children}
-      </div>
+      <ScrollArea className="flex-1 h-[400px]">
+        <div className="p-4 space-y-2">
+          {children}
+        </div>
+      </ScrollArea>
     </div>
   );
 };

@@ -3,10 +3,11 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Save } from 'lucide-react';
+import { Save, ArrowRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useDashboard } from '@/context/DashboardContext';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
+import { Link } from 'react-router-dom';
 
 const NewsSection: React.FC = () => {
   const [personName, setPersonName] = useState('');
@@ -59,7 +60,20 @@ const NewsSection: React.FC = () => {
   
   return (
     <div className="mb-8">
-      <h2 className="text-2xl font-bold mb-4 text-dashboard-heading">News</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold text-dashboard-heading">News</h2>
+        <Button 
+          variant="outline" 
+          asChild 
+          size="sm" 
+          className="hover:bg-dashboard-lightBlue hover:text-dashboard-blue border-dashboard-border"
+        >
+          <Link to="/news">
+            News Backend
+            <ArrowRight className="h-4 w-4 ml-2" />
+          </Link>
+        </Button>
+      </div>
       
       <Card className="bg-white shadow-md">
         <CardHeader className="pb-2">

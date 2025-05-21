@@ -1,9 +1,9 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useDashboard } from '@/context/DashboardContext';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Newspaper } from 'lucide-react';
+import { ArrowLeft, Newspaper, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
@@ -15,9 +15,25 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { NewsItem } from '@/types/dashboard';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const NewsBackend: React.FC = () => {
   const { newsItems } = useDashboard();
+  const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
+
+  const handleViewNews = (news: NewsItem) => {
+    setSelectedNews(news);
+  };
 
   return (
     <div className="bg-dashboard-gray min-h-screen p-4 md:p-6 lg:p-8">
@@ -53,6 +69,7 @@ const NewsBackend: React.FC = () => {
                       <TableHead>Person Name</TableHead>
                       <TableHead>News Content</TableHead>
                       <TableHead>Date Added</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -72,6 +89,16 @@ const NewsBackend: React.FC = () => {
                               {formattedDate}
                             </Badge>
                           </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleViewNews(item)}
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              View
+                            </Button>
+                          </TableCell>
                         </TableRow>
                       );
                     })}
@@ -82,6 +109,44 @@ const NewsBackend: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* News Detail Dialog */}
+      <Dialog open={selectedNews !== null} onOpenChange={(open) => !open && setSelectedNews(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>News Detail</DialogTitle>
+            {selectedNews && (
+              <DialogDescription className="text-sm text-muted-foreground">
+                Added on {format(parseISO(selectedNews.date), 'MMMM d, yyyy - h:mm a')}
+              </DialogDescription>
+            )}
+          </DialogHeader>
+          
+          {selectedNews && (
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-sm font-medium text-gray-500">Person Name</h3>
+                <p className="font-medium">{selectedNews.personName}</p>
+              </div>
+              
+              <div>
+                <h3 className="text-sm font-medium text-gray-500">Content</h3>
+                <ScrollArea className="h-[200px] rounded-md border p-4 bg-slate-50">
+                  <p className="whitespace-pre-wrap">{selectedNews.content}</p>
+                </ScrollArea>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter className="sm:justify-end">
+            <DialogClose asChild>
+              <Button type="button" variant="secondary">
+                Close
+              </Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
