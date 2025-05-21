@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useDashboard } from '@/context/DashboardContext';
+import { useDashboard, DashboardProvider } from '@/context/DashboardContext';
 import { 
   Table,
   TableBody,
@@ -16,7 +16,7 @@ import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 
-const Tables: React.FC = () => {
+const TablesContent: React.FC = () => {
   const { fulfilledRequests, recentJoiners } = useDashboard();
 
   // Format the date from ISO string
@@ -147,6 +147,15 @@ const Tables: React.FC = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+// Wrap the component with DashboardProvider
+const Tables: React.FC = () => {
+  return (
+    <DashboardProvider>
+      <TablesContent />
+    </DashboardProvider>
   );
 };
 
