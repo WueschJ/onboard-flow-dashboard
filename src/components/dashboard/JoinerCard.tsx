@@ -42,10 +42,6 @@ const JoinerCard: React.FC<JoinerCardProps> = ({ joiner }) => {
     setIsDeleteDialogOpen(false);
   };
 
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(joiner.email);
-  };
-
   return (
     <>
       <JoinerContextMenu
@@ -60,7 +56,7 @@ const JoinerCard: React.FC<JoinerCardProps> = ({ joiner }) => {
                 company={joiner.company}
                 email={joiner.email}
                 creationDate={joiner.creationDate}
-                onCopyEmail={copyToClipboard}
+                onCopyEmail={() => {}}
               />
             </div>
             <button className="text-gray-400 hover:text-gray-600">
