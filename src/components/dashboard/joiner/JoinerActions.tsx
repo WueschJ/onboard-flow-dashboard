@@ -12,7 +12,7 @@ import {
 import { ResponsiblePerson } from '@/types/dashboard';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { format, addDays, parseISO, isAfter } from 'date-fns';
-import { Phone, Mail } from 'lucide-react';
+import { Smartphone, Mail } from 'lucide-react';
 
 interface JoinerActionsProps {
   id: string;
@@ -55,7 +55,7 @@ const JoinerActions: React.FC<JoinerActionsProps> = ({
             onCheckedChange={() => toggleJoinerInAppNotification(id)}
           />
           <label htmlFor={`inapp-${id}`} className="flex items-center text-gray-500">
-            <Phone className="h-3.5 w-3.5" />
+            <Smartphone className="h-3.5 w-3.5" />
           </label>
         </div>
         
