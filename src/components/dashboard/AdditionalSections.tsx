@@ -35,9 +35,11 @@ const AdditionalSections: React.FC = () => {
           showAddButton 
           onAddItem={() => setContactDialogOpen(true)}
         >
-          {onboardingList.map((contact) => (
-            <OnboardingContactCard key={contact.id} contact={contact} />
-          ))}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 p-1">
+            {onboardingList.map((contact) => (
+              <OnboardingContactCard key={contact.id} contact={contact} />
+            ))}
+          </div>
         </KanbanLane>
       </div>
       
