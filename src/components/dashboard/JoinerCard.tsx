@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/select';
 import { useDashboard } from '@/context/DashboardContext';
 import { format, addDays, parseISO, isAfter } from 'date-fns';
-import { Mail, Calendar } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface JoinerCardProps {
