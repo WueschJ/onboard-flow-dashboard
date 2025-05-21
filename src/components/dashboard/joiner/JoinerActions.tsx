@@ -12,6 +12,7 @@ import {
 import { ResponsiblePerson } from '@/types/dashboard';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { format, addDays, parseISO, isAfter } from 'date-fns';
+import { Phone, Mail } from 'lucide-react';
 
 interface JoinerActionsProps {
   id: string;
@@ -53,8 +54,8 @@ const JoinerActions: React.FC<JoinerActionsProps> = ({
             checked={isInAppNotificationSent}
             onCheckedChange={() => toggleJoinerInAppNotification(id)}
           />
-          <label htmlFor={`inapp-${id}`} className="text-xs text-gray-500">
-            In-app
+          <label htmlFor={`inapp-${id}`} className="flex items-center text-gray-500">
+            <Phone className="h-3.5 w-3.5" />
           </label>
         </div>
         
@@ -69,8 +70,8 @@ const JoinerActions: React.FC<JoinerActionsProps> = ({
                   disabled={!canSendEmail}
                   className={!canSendEmail ? "opacity-50 cursor-not-allowed" : ""}
                 />
-                <label htmlFor={`email-${id}`} className={`text-xs ${!canSendEmail ? "text-gray-400" : "text-gray-500"}`}>
-                  Email
+                <label htmlFor={`email-${id}`} className={`flex items-center ${!canSendEmail ? "text-gray-400" : "text-gray-500"}`}>
+                  <Mail className="h-3.5 w-3.5" />
                 </label>
               </div>
             </TooltipTrigger>
