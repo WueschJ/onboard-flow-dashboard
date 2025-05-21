@@ -212,6 +212,18 @@ const JoinerCard: React.FC<JoinerCardProps> = ({ joiner }) => {
                 className="col-span-3"
               />
             </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <label htmlFor="creation-date" className="text-right text-sm font-medium">
+                Join Date
+              </label>
+              <Input
+                id="creation-date"
+                type="date"
+                value={editedJoiner.creationDate.split('T')[0]}
+                onChange={(e) => setEditedJoiner({...editedJoiner, creationDate: `${e.target.value}T00:00:00.000Z`})}
+                className="col-span-3"
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
