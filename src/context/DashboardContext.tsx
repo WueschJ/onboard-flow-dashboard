@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { 
   RequestItem, 
@@ -27,9 +26,9 @@ type DashboardContextType = {
   };
   totalRequestsGranted: number;
   addNewRequest: (request: Omit<RequestItem, 'id' | 'isFulfilled' | 'responsiblePersons'>) => void;
-  addNewJoiner: (joiner: Omit<JoinerItem, 'id' | 'isInAppNotificationSent' | 'isEmailNotificationSent'>) => void;
+  addNewJoiner: (joiner: Omit<JoinerItem, 'id' | 'isInAppNotificationSent' | 'isEmailNotificationSent' | 'creationDate'>) => void;
   addMotiusAsk: (ask: Omit<RequestItem, 'id' | 'isFulfilled' | 'responsiblePersons'>) => void;
-  addOnboardingContact: (contact: Omit<OnboardingContact, 'id'>) => void;
+  addOnboardingContact: (contact: Omit<OnboardingContact, 'id' | 'isCompleted'>, responsiblePersonId?: string) => void;
   assignResponsibleToRequest: (requestId: string, personId: string) => void;
   removeResponsibleFromRequest: (requestId: string, personId: string) => void;
   assignResponsibleToJoiner: (joinerId: string, personId: string) => void;
@@ -39,6 +38,7 @@ type DashboardContextType = {
   completeFulfillRequest: (requestId: string) => void;
   addCustomResponsiblePerson: (name: string) => ResponsiblePerson;
   addWeeklyNudge: () => void;
+  completeOnboardingContact: (contactId: string) => void;
 };
 
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
@@ -105,7 +105,8 @@ const initialNewJoiners: JoinerItem[] = [
     company: 'Acme Inc.',
     email: 'mike.robinson@acme.com',
     isInAppNotificationSent: false,
-    isEmailNotificationSent: false
+    isEmailNotificationSent: false,
+    creationDate: new Date().toISOString()
   },
   {
     id: '2',
@@ -113,7 +114,8 @@ const initialNewJoiners: JoinerItem[] = [
     company: 'Global Tech',
     email: 'lisa.chen@globaltech.com',
     isInAppNotificationSent: false,
-    isEmailNotificationSent: false
+    isEmailNotificationSent: false,
+    creationDate: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString() // 4 days ago
   }
 ];
 
@@ -152,17 +154,25 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [weeklyStats, setWeeklyStats] = useState({ newRequests: 0, newJoiners: 0, requestsGranted: 0 });
   const [totalRequestsGranted, setTotalRequestsGranted] = useState(0);
 
-  // Generate Fulfill Requests based on New Requests
+  // Generate Fulfill Requests based on New Requests and Requests in Process
   useEffect(() => {
-    const generatedFulfillRequests = newRequests.map(request => ({
+    const allRequests = [...newRequests, ...requestsInProcess];
+    const generatedFulfillRequests = allRequests.map(request => ({
       id: request.id,
       name: request.personName,
       requestText: request.requestText,
       email: request.email,
       isCompleted: false
     }));
-    setFulfillRequests(generatedFulfillRequests);
-  }, [newRequests]);
+    
+    // Keep existing fulfill requests that are not in newRequests or requestsInProcess
+    // (this preserves any fulfill requests that were kept after a request was fulfilled)
+    const existingFulfillRequests = fulfillRequests.filter(item => 
+      !allRequests.some(request => request.id === item.id)
+    );
+    
+    setFulfillRequests([...generatedFulfillRequests, ...existingFulfillRequests]);
+  }, [newRequests, requestsInProcess]);
 
   // Add a new request
   const addNewRequest = (request: Omit<RequestItem, 'id' | 'isFulfilled' | 'responsiblePersons'>) => {
@@ -179,12 +189,13 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   // Add a new joiner
-  const addNewJoiner = (joiner: Omit<JoinerItem, 'id' | 'isInAppNotificationSent' | 'isEmailNotificationSent'>) => {
+  const addNewJoiner = (joiner: Omit<JoinerItem, 'id' | 'isInAppNotificationSent' | 'isEmailNotificationSent' | 'creationDate'>) => {
     const newJoiner: JoinerItem = {
       id: Date.now().toString(),
       ...joiner,
       isInAppNotificationSent: false,
-      isEmailNotificationSent: false
+      isEmailNotificationSent: false,
+      creationDate: new Date().toISOString()
     };
     setNewJoiners(prev => [...prev, newJoiner]);
     
@@ -204,10 +215,18 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   // Add an onboarding contact
-  const addOnboardingContact = (contact: Omit<OnboardingContact, 'id'>) => {
+  const addOnboardingContact = (contact: Omit<OnboardingContact, 'id' | 'isCompleted'>, responsiblePersonId?: string) => {
+    let responsiblePerson: ResponsiblePerson | undefined;
+    
+    if (responsiblePersonId) {
+      responsiblePerson = responsiblePersons.find(p => p.id === responsiblePersonId);
+    }
+    
     const newContact: OnboardingContact = {
       id: Date.now().toString(),
       ...contact,
+      responsiblePerson,
+      isCompleted: false
     };
     setOnboardingList(prev => [...prev, newContact]);
   };
@@ -391,6 +410,12 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
+  // Complete an onboarding contact
+  const completeOnboardingContact = (contactId: string) => {
+    const updatedOnboardingList = onboardingList.filter(contact => contact.id !== contactId);
+    setOnboardingList(updatedOnboardingList);
+  };
+
   return (
     <DashboardContext.Provider
       value={{
@@ -418,7 +443,8 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         toggleJoinerEmailNotification,
         completeFulfillRequest,
         addCustomResponsiblePerson,
-        addWeeklyNudge
+        addWeeklyNudge,
+        completeOnboardingContact
       }}
     >
       {children}

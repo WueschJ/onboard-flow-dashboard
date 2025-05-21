@@ -6,6 +6,7 @@ import { useDashboard } from '@/context/DashboardContext';
 import { Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
 
 interface FulfillRequestCardProps {
   item: FulfillRequestItem;
@@ -44,19 +45,17 @@ const FulfillRequestCard: React.FC<FulfillRequestCardProps> = ({ item }) => {
   return (
     <div className="bg-white p-4 rounded-md shadow-sm border border-dashboard-border animate-fade-in">
       <h4 className="text-base font-medium text-dashboard-heading mb-2">{item.name}</h4>
-      <div className="text-sm text-dashboard-text mb-1">{item.requestText}</div>
+      <div className="text-sm text-dashboard-text mb-2">{item.requestText}</div>
       
-      <div className="flex items-center mb-3 gap-1">
-        <div className="text-sm text-dashboard-text overflow-hidden text-ellipsis">{item.email}</div>
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="h-6 w-6" 
+      <div className="flex items-center gap-2 mb-3">
+        <Badge 
+          variant="outline" 
+          className="bg-dashboard-lightBlue text-dashboard-blue border-dashboard-blue/20 cursor-pointer hover:bg-dashboard-blue/10 transition-colors"
           onClick={copyToClipboard}
-          title="Copy email"
         >
-          <Copy className="h-3 w-3" />
-        </Button>
+          <span className="truncate max-w-[180px]">{item.email}</span>
+          <Copy className="h-3 w-3 ml-1" />
+        </Badge>
       </div>
       
       <div className="flex items-center justify-end">

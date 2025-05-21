@@ -1,137 +1,138 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useDashboard } from '@/context/DashboardContext';
-import { Calendar, PlusCircle, TrendingUp } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '../ui/button';
+import { Plus } from 'lucide-react';
+import { format } from 'date-fns';
 
-const ProgressTrackers: React.FC = () => {
-  const { totalRequestsGranted, weeklyStats, weeklyNudges, addWeeklyNudge } = useDashboard();
+const ProgressTrackers = () => {
+  const { 
+    totalRequestsGranted, 
+    weeklyStats, 
+    weeklyNudges,
+    addWeeklyNudge 
+  } = useDashboard();
 
-  // Calculate percentages for progress bars
-  const overallProgress = Math.min(Math.round((totalRequestsGranted / 30) * 100), 100);
-  
-  const currentWeekNudge = weeklyNudges.find(nudge => 
-    nudge.week === new Date().getDay() && nudge.year === new Date().getFullYear()
-  ) || { count: 0 };
-  
-  const nudgingProgress = Math.min(Math.round((currentWeekNudge.count / 10) * 100), 100);
-  
-  const weeklyRequestsProgress = Math.min(Math.round((weeklyStats.requestsGranted / 3) * 100), 100);
-  const weeklyJoinersProgress = Math.min(Math.round((weeklyStats.newJoiners / 3) * 100), 100);
-  const weeklyNewRequestsProgress = Math.min(Math.round((weeklyStats.newRequests / 3) * 100), 100);
-  
-  // Previous weeks' nudges (excluding current week)
-  const previousWeeks = weeklyNudges
-    .filter(nudge => 
-      nudge.week !== new Date().getDay() || nudge.year !== new Date().getFullYear()
-    )
-    .slice(-3); // Get only the last 3 previous weeks
+  // Calculate progress percentages
+  const goalTotalRequests = 30;
+  const goalWeeklyNudges = 10;
+  const goalWeeklyRequests = 3;
+  const goalWeeklyJoiners = 3;
+  const goalWeeklyRequestsGranted = 3;
 
+  const totalRequestsProgress = Math.min((totalRequestsGranted / goalTotalRequests) * 100, 100);
+  
+  // Get current week number and year
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentWeekNumber = Math.ceil((now.getTime() - new Date(currentYear, 0, 1).getTime()) / (7 * 24 * 60 * 60 * 1000));
+  
+  // Find the current week's nudges count
+  const currentWeekNudges = weeklyNudges.find(nudge => 
+    nudge.week === currentWeekNumber && nudge.year === currentYear
+  )?.count || 0;
+  
+  const weeklyNudgesProgress = Math.min((currentWeekNudges / goalWeeklyNudges) * 100, 100);
+  
+  // Calculate weekly stats progress
+  const weeklyRequestsProgress = Math.min((weeklyStats.newRequests / goalWeeklyRequests) * 100, 100);
+  const weeklyJoinersProgress = Math.min((weeklyStats.newJoiners / goalWeeklyJoiners) * 100, 100);
+  const weeklyRequestsGrantedProgress = Math.min((weeklyStats.requestsGranted / goalWeeklyRequestsGranted) * 100, 100);
+
+  // Get previous weeks' nudges for historical display
+  const previousWeeksNudges = weeklyNudges
+    .filter(nudge => nudge.year < currentYear || (nudge.year === currentYear && nudge.week < currentWeekNumber))
+    .sort((a, b) => b.year - a.year || b.week - a.week)
+    .slice(0, 4); // Show up to 4 previous weeks
+
+  const handleNudgeClick = () => {
+    addWeeklyNudge();
+  };
+  
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
-      {/* Overall Progress Tracker */}
-      <Card className="col-span-1 lg:col-span-2 border border-dashboard-border hover:shadow-card-hover transition-shadow">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle className="text-dashboard-heading">Overall Progress Tracker</CardTitle>
-            <CardDescription>Goal: 30 requests granted by August 1, 2025</CardDescription>
+    <div className="mb-8">
+      <h2 className="text-2xl font-bold mb-4 text-dashboard-heading">Progress Trackers</h2>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Overall Progress Tracker */}
+        <div className="bg-gradient-to-r from-dashboard-lightBlue to-white p-4 rounded-md shadow-sm border border-dashboard-border">
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="text-lg font-medium text-dashboard-heading">Total Requests Granted</h3>
+            <span className="text-sm text-dashboard-blue font-bold">{totalRequestsGranted}/{goalTotalRequests}</span>
           </div>
-          <Calendar className="h-5 w-5 text-dashboard-blue" />
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="font-medium">Progress</span>
-              <span className="text-dashboard-blue font-semibold">{totalRequestsGranted}/30 requests</span>
+          <Progress value={totalRequestsProgress} className="h-3 mb-1" variant="blue" />
+          <p className="text-xs text-gray-500 mt-2">Goal: {goalTotalRequests} by August 1, 2025</p>
+        </div>
+        
+        {/* Weekly Nudging Tracker */}
+        <div className="bg-gradient-to-r from-dashboard-softPurple to-white p-4 rounded-md shadow-sm border border-dashboard-border">
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="text-lg font-medium text-dashboard-heading">Weekly Nudging</h3>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-dashboard-purple font-bold">{currentWeekNudges}/{goalWeeklyNudges}</span>
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                className="h-7 w-7 p-0 hover:bg-dashboard-purple/10"
+                onClick={handleNudgeClick}
+              >
+                <Plus className="h-4 w-4 text-dashboard-purple" />
+              </Button>
             </div>
-            <Progress value={overallProgress} variant="blue" className="h-2" />
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Weekly Nudging Tracker */}
-      <Card className="border border-dashboard-border hover:shadow-card-hover transition-shadow">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle className="text-dashboard-heading">Weekly Nudging Tracker</CardTitle>
-            <CardDescription>Goal: 10 nudges per week</CardDescription>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button 
-              size="icon" 
-              variant="outline" 
-              onClick={addWeeklyNudge} 
-              className="border-dashboard-purple text-dashboard-purple hover:text-dashboard-purple hover:bg-dashboard-softPurple"
-            >
-              <PlusCircle className="h-4 w-4" />
-            </Button>
-            <TrendingUp className="h-5 w-5 text-dashboard-purple" />
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="font-medium">Current Week</span>
-                <span className="text-dashboard-purple font-semibold">{currentWeekNudge.count}/10 nudges</span>
-              </div>
-              <Progress value={nudgingProgress} variant="purple" className="h-2" />
-            </div>
-            
-            {/* Previous Weeks */}
-            {previousWeeks.map((week, index) => (
-              <div key={`${week.year}-${week.week}`} className="space-y-1">
-                <div className="flex justify-between text-xs text-gray-500">
-                  <span>Week {week.week}</span>
-                  <span>{week.count}/10 nudges</span>
+          <Progress value={weeklyNudgesProgress} className="h-3 mb-1" variant="purple" />
+          <p className="text-xs text-gray-500 mt-2">
+            Current Week: {currentWeekNumber}, resets every Monday
+          </p>
+          
+          {previousWeeksNudges.length > 0 && (
+            <div className="mt-3 grid grid-cols-4 gap-1">
+              {previousWeeksNudges.map((nudge) => (
+                <div key={`${nudge.year}-${nudge.week}`} className="text-center">
+                  <Progress 
+                    value={(nudge.count / goalWeeklyNudges) * 100} 
+                    className="h-1.5 mb-1 opacity-50" 
+                    variant="purple" 
+                  />
+                  <span className="text-[0.65rem] text-gray-400">{`W${nudge.week}`}</span>
                 </div>
-                <Progress 
-                  value={Math.min(Math.round((week.count / 10) * 100), 100)} 
-                  variant="purple"
-                  className="h-1 opacity-50" 
-                />
-              </div>
-            ))}
+              ))}
+            </div>
+          )}
+        </div>
+        
+        {/* Weekly Stats Tracker */}
+        <div className="bg-gradient-to-r from-dashboard-lightBlue to-white p-4 rounded-md shadow-sm border border-dashboard-border">
+          <h3 className="text-lg font-medium text-dashboard-heading mb-2">Weekly Stats</h3>
+          
+          <div className="mb-2">
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-gray-600">New Requests</span>
+              <span className="text-dashboard-blue font-bold">{weeklyStats.newRequests}/{goalWeeklyRequests}</span>
+            </div>
+            <Progress value={weeklyRequestsProgress} className="h-2 mb-1" variant="blue" />
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Weekly Metrics Tracker */}
-      <Card className="border border-dashboard-border hover:shadow-card-hover transition-shadow">
-        <CardHeader>
-          <CardTitle className="text-dashboard-heading">Weekly Metrics</CardTitle>
-          <CardDescription>Goal: 3 of each per week</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="font-medium">New Requests</span>
-                <span className="text-dashboard-amber font-semibold">{weeklyStats.newRequests}/3</span>
-              </div>
-              <Progress value={weeklyNewRequestsProgress} variant="amber" className="h-2" />
+          
+          <div className="mb-2">
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-gray-600">New Joiners</span>
+              <span className="text-green-600 font-bold">{weeklyStats.newJoiners}/{goalWeeklyJoiners}</span>
             </div>
-            
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="font-medium">New Joiners</span>
-                <span className="text-dashboard-green font-semibold">{weeklyStats.newJoiners}/3</span>
-              </div>
-              <Progress value={weeklyJoinersProgress} variant="green" className="h-2" />
-            </div>
-            
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="font-medium">Requests Granted</span>
-                <span className="text-dashboard-blue font-semibold">{weeklyStats.requestsGranted}/3</span>
-              </div>
-              <Progress value={weeklyRequestsProgress} variant="blue" className="h-2" />
-            </div>
+            <Progress value={weeklyJoinersProgress} className="h-2 mb-1" variant="green" />
           </div>
-        </CardContent>
-      </Card>
+          
+          <div>
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-gray-600">Requests Granted</span>
+              <span className="text-amber-600 font-bold">{weeklyStats.requestsGranted}/{goalWeeklyRequestsGranted}</span>
+            </div>
+            <Progress value={weeklyRequestsGrantedProgress} className="h-2 mb-1" variant="amber" />
+          </div>
+          
+          <p className="text-xs text-gray-500 mt-2">Resets every Monday</p>
+        </div>
+      </div>
     </div>
   );
 };

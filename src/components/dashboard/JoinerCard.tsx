@@ -11,6 +11,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useDashboard } from '@/context/DashboardContext';
+import { format, addDays, parseISO, isAfter } from 'date-fns';
+import { Mail, Calendar } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface JoinerCardProps {
   joiner: JoinerItem;
@@ -27,6 +30,11 @@ const JoinerCard: React.FC<JoinerCardProps> = ({ joiner }) => {
   const handleResponsibleChange = (value: string) => {
     assignResponsibleToJoiner(joiner.id, value);
   };
+  
+  const creationDate = parseISO(joiner.creationDate);
+  const emailThresholdDate = addDays(creationDate, 3);
+  const canSendEmail = isAfter(new Date(), emailThresholdDate);
+  const formattedCreationDate = format(creationDate, 'MMM d, yyyy');
 
   return (
     <div className="bg-white p-4 rounded-md shadow-sm border border-dashboard-border animate-fade-in">
@@ -43,6 +51,11 @@ const JoinerCard: React.FC<JoinerCardProps> = ({ joiner }) => {
         </button>
       </div>
       
+      <div className="flex items-center text-xs text-gray-500 mb-3">
+        <Calendar className="h-3.5 w-3.5 mr-1" />
+        <span>Added: {formattedCreationDate}</span>
+      </div>
+      
       <div className="flex items-center justify-between mt-3">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1">
@@ -56,16 +69,29 @@ const JoinerCard: React.FC<JoinerCardProps> = ({ joiner }) => {
             </label>
           </div>
           
-          <div className="flex items-center gap-1">
-            <Checkbox 
-              id={`email-${joiner.id}`}
-              checked={joiner.isEmailNotificationSent}
-              onCheckedChange={() => toggleJoinerEmailNotification(joiner.id)}
-            />
-            <label htmlFor={`email-${joiner.id}`} className="text-xs text-gray-500">
-              Email
-            </label>
-          </div>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center gap-1">
+                  <Checkbox 
+                    id={`email-${joiner.id}`}
+                    checked={joiner.isEmailNotificationSent}
+                    onCheckedChange={() => toggleJoinerEmailNotification(joiner.id)}
+                    disabled={!canSendEmail}
+                    className={!canSendEmail ? "opacity-50 cursor-not-allowed" : ""}
+                  />
+                  <label htmlFor={`email-${joiner.id}`} className={`text-xs ${!canSendEmail ? "text-gray-400" : "text-gray-500"}`}>
+                    Email
+                  </label>
+                </div>
+              </TooltipTrigger>
+              {!canSendEmail && (
+                <TooltipContent>
+                  <p>Email can be sent after {format(emailThresholdDate, 'MMM d, yyyy')}</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
         </div>
         
         {joiner.responsiblePerson ? (

@@ -11,6 +11,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useDashboard } from '@/context/DashboardContext';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface AddContactDialogProps {
   open: boolean;
@@ -21,22 +28,29 @@ interface FormValues {
   name: string;
   company: string;
   email: string;
+  responsiblePersonId?: string;
 }
 
 const AddContactDialog: React.FC<AddContactDialogProps> = ({ open, onOpenChange }) => {
-  const { addOnboardingContact } = useDashboard();
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormValues>({
+  const { addOnboardingContact, responsiblePersons } = useDashboard();
+  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<FormValues>({
     defaultValues: {
       name: '',
       company: '',
-      email: ''
+      email: '',
+      responsiblePersonId: undefined
     }
   });
   
   const onSubmit = (data: FormValues) => {
-    addOnboardingContact(data);
+    const { responsiblePersonId, ...contactData } = data;
+    addOnboardingContact(contactData, responsiblePersonId);
     reset();
     onOpenChange(false);
+  };
+  
+  const handleResponsibleChange = (value: string) => {
+    setValue('responsiblePersonId', value);
   };
   
   return (
@@ -76,6 +90,22 @@ const AddContactDialog: React.FC<AddContactDialogProps> = ({ open, onOpenChange 
               placeholder="Enter email"
             />
             {errors.email && <p className="text-red-500 text-xs">{errors.email.message}</p>}
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="responsiblePerson">Assign To</Label>
+            <Select onValueChange={handleResponsibleChange}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a person" />
+              </SelectTrigger>
+              <SelectContent>
+                {responsiblePersons.map((person) => (
+                  <SelectItem key={person.id} value={person.id}>
+                    {person.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           
           <div className="flex justify-end gap-2 pt-2">

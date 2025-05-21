@@ -24,6 +24,7 @@ export type JoinerItem = {
   responsiblePerson?: ResponsiblePerson;
   isInAppNotificationSent: boolean;
   isEmailNotificationSent: boolean;
+  creationDate: string;
 };
 
 export type FulfillRequestItem = {
@@ -40,6 +41,7 @@ export type OnboardingContact = {
   email: string;
   company: string;
   responsiblePerson?: ResponsiblePerson;
+  isCompleted: boolean;
 };
 
 export type WeeklyNudge = {
