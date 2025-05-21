@@ -17,7 +17,7 @@ const AdditionalSections: React.FC = () => {
     <div>
       <h2 className="text-2xl font-bold mb-4 text-dashboard-heading">Additional Tasks</h2>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Motius Asks Section */}
         <KanbanLane 
           title="Motius Asks" 
