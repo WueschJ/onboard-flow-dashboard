@@ -59,21 +59,8 @@ const NewsSection: React.FC = () => {
   };
   
   return (
-    <div className="mb-8">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold text-dashboard-heading">News</h2>
-        <Button 
-          variant="outline" 
-          asChild 
-          size="sm" 
-          className="hover:bg-dashboard-lightBlue hover:text-dashboard-blue border-dashboard-border"
-        >
-          <Link to="/news">
-            News Backend
-            <ArrowRight className="h-4 w-4 ml-2" />
-          </Link>
-        </Button>
-      </div>
+    <div className="mb-8 relative">
+      <h2 className="text-2xl font-bold mb-4 text-dashboard-heading">News</h2>
       
       <Card className="bg-white shadow-md">
         <CardHeader className="pb-2">
@@ -115,6 +102,21 @@ const NewsSection: React.FC = () => {
           </div>
         </form>
       </Card>
+      
+      {/* Positioned at the bottom right corner */}
+      <div className="absolute bottom-0 right-0 -mb-12">
+        <Button 
+          variant="outline" 
+          asChild 
+          size="sm" 
+          className="hover:bg-dashboard-lightBlue hover:text-dashboard-blue border-dashboard-border"
+        >
+          <Link to="/news">
+            News Backend
+            <ArrowRight className="h-4 w-4 ml-2" />
+          </Link>
+        </Button>
+      </div>
     </div>
   );
 };
