@@ -29,8 +29,8 @@ type DashboardContextType = {
   addNewJoiner: (joiner: Omit<JoinerItem, 'id' | 'isInAppNotificationSent' | 'isEmailNotificationSent' | 'creationDate'>) => void;
   addMotiusAsk: (ask: Omit<RequestItem, 'id' | 'isFulfilled' | 'responsiblePersons'>) => void;
   addOnboardingContact: (contact: Omit<OnboardingContact, 'id' | 'isCompleted'>, responsiblePersonId?: string) => void;
-  assignResponsibleToRequest: (requestId: string, personId: string) => void;
-  removeResponsibleFromRequest: (requestId: string, personId: string) => void;
+  assignResponsibleToRequest: (requestId: string, personId: string, isMotiusAsk?: boolean) => void;
+  removeResponsibleFromRequest: (requestId: string, personId: string, isMotiusAsk?: boolean) => void;
   assignResponsibleToJoiner: (joinerId: string, personId: string) => void;
   markRequestFulfilled: (requestId: string) => void;
   toggleJoinerInAppNotification: (joinerId: string) => void;
@@ -232,16 +232,20 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   // Assign a responsible person to a request
-  const assignResponsibleToRequest = (requestId: string, personId: string) => {
+  const assignResponsibleToRequest = (requestId: string, personId: string, isMotiusAsk: boolean = false) => {
     const person = responsiblePersons.find(p => p.id === personId);
     if (!person) return;
 
-    // Find if the request is in newRequests or requestsInProcess
-    let requestFound = newRequests.find(r => r.id === requestId);
-    let inNewRequests = !!requestFound;
+    // Find if the request is in newRequests, requestsInProcess, or motiusAsks
+    let requestFound = isMotiusAsk 
+      ? motiusAsks.find(r => r.id === requestId) 
+      : newRequests.find(r => r.id === requestId);
+    
+    let sourceCollection = isMotiusAsk ? 'motiusAsks' : 'newRequests';
 
     if (!requestFound) {
       requestFound = requestsInProcess.find(r => r.id === requestId);
+      sourceCollection = 'requestsInProcess';
     }
 
     if (!requestFound) return;
@@ -256,24 +260,28 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       responsiblePersons: [...requestFound.responsiblePersons, person].slice(0, 2) // Max 2 responsible persons
     };
 
-    if (inNewRequests) {
+    if (sourceCollection === 'motiusAsks') {
+      // Remove from motius asks
+      setMotiusAsks(prev => prev.filter(r => r.id !== requestId));
+      
+      // Add to requests in process
+      setRequestsInProcess(prev => [...prev, updatedRequestWithPerson]);
+    } else if (sourceCollection === 'newRequests') {
       // Remove from new requests
-      const updatedNewRequests = newRequests.filter(r => r.id !== requestId);
-      setNewRequests(updatedNewRequests);
+      setNewRequests(prev => prev.filter(r => r.id !== requestId));
       
       // Add to requests in process
       setRequestsInProcess(prev => [...prev, updatedRequestWithPerson]);
     } else {
       // Update in requests in process
-      const updatedRequestsInProcess = requestsInProcess.map(r => 
+      setRequestsInProcess(prev => prev.map(r => 
         r.id === requestId ? updatedRequestWithPerson : r
-      );
-      setRequestsInProcess(updatedRequestsInProcess);
+      ));
     }
   };
 
   // Remove a responsible person from a request
-  const removeResponsibleFromRequest = (requestId: string, personId: string) => {
+  const removeResponsibleFromRequest = (requestId: string, personId: string, isMotiusAsk: boolean = false) => {
     // Only look in requestsInProcess since responsible persons are only in that list
     const request = requestsInProcess.find(r => r.id === requestId);
     if (!request) return;
@@ -283,13 +291,17 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       responsiblePersons: request.responsiblePersons.filter(p => p.id !== personId)
     };
 
-    // If no responsible persons left, move back to new requests
+    // If no responsible persons left, move back to original collection
     if (updatedRequestWithoutPerson.responsiblePersons.length === 0) {
       // Remove from requests in process
       setRequestsInProcess(prev => prev.filter(r => r.id !== requestId));
       
-      // Add to new requests
-      setNewRequests(prev => [...prev, updatedRequestWithoutPerson]);
+      // Add back to original collection
+      if (isMotiusAsk) {
+        setMotiusAsks(prev => [...prev, updatedRequestWithoutPerson]);
+      } else {
+        setNewRequests(prev => [...prev, updatedRequestWithoutPerson]);
+      }
     } else {
       // Update in requests in process
       setRequestsInProcess(prev => prev.map(r => 

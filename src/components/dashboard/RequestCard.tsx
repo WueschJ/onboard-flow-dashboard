@@ -18,9 +18,14 @@ import { Input } from '@/components/ui/input';
 interface RequestCardProps {
   request: RequestItem;
   inProcess?: boolean;
+  isMotiusAsk?: boolean;
 }
 
-const RequestCard: React.FC<RequestCardProps> = ({ request, inProcess = false }) => {
+const RequestCard: React.FC<RequestCardProps> = ({ 
+  request, 
+  inProcess = false,
+  isMotiusAsk = false
+}) => {
   const { 
     assignResponsibleToRequest, 
     markRequestFulfilled,
@@ -38,13 +43,13 @@ const RequestCard: React.FC<RequestCardProps> = ({ request, inProcess = false })
       return;
     }
     
-    assignResponsibleToRequest(request.id, value);
+    assignResponsibleToRequest(request.id, value, isMotiusAsk);
   };
 
   const handleAddCustomPerson = () => {
     if (customName.trim()) {
       const newPerson = addCustomResponsiblePerson(customName);
-      assignResponsibleToRequest(request.id, newPerson.id);
+      assignResponsibleToRequest(request.id, newPerson.id, isMotiusAsk);
       setCustomName("");
       setShowCustomInput(false);
     }
@@ -57,7 +62,7 @@ const RequestCard: React.FC<RequestCardProps> = ({ request, inProcess = false })
   };
 
   const handleRemovePerson = (personId: string) => {
-    removeResponsibleFromRequest(request.id, personId);
+    removeResponsibleFromRequest(request.id, personId, isMotiusAsk);
   };
 
   // Can assign another person if there's less than 2 responsible persons

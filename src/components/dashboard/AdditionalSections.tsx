@@ -25,7 +25,11 @@ const AdditionalSections: React.FC = () => {
           onAddItem={() => setMotiusAskDialogOpen(true)}
         >
           {motiusAsks.map((ask) => (
-            <RequestCard key={ask.id} request={ask} />
+            <RequestCard 
+              key={ask.id} 
+              request={ask} 
+              isMotiusAsk={true} 
+            />
           ))}
         </KanbanLane>
         
