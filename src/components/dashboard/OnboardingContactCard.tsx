@@ -55,50 +55,51 @@ const OnboardingContactCard: React.FC<OnboardingContactCardProps> = ({ contact }
   };
 
   return (
-    <div className="bg-white p-4 rounded-md shadow-sm border border-dashboard-border animate-fade-in">
-      <h4 className="text-base font-medium text-dashboard-heading mb-2">{contact.name}</h4>
-      <div className="text-sm text-dashboard-text mb-1">{contact.company}</div>
+    <div className="bg-white p-2 rounded-md shadow-sm border border-dashboard-border animate-fade-in text-sm">
+      <h4 className="text-sm font-medium text-dashboard-heading mb-0.5 truncate" title={contact.name}>{contact.name}</h4>
+      <div className="text-xs text-dashboard-text mb-0.5 truncate" title={contact.company}>{contact.company}</div>
       
-      <div className="flex items-center mb-3 gap-1">
-        <div className="text-sm text-dashboard-text overflow-hidden text-ellipsis">{contact.email}</div>
+      <div className="flex items-center mb-1 gap-0.5">
+        <div className="text-xs text-dashboard-text overflow-hidden text-ellipsis truncate max-w-[90px]" title={contact.email}>{contact.email}</div>
         <Button 
           variant="ghost" 
           size="icon" 
-          className="h-6 w-6" 
+          className="h-5 w-5 p-0" 
           onClick={copyToClipboard}
           title="Copy email"
         >
-          <Copy className="h-3 w-3" />
+          <Copy className="h-2.5 w-2.5" />
         </Button>
       </div>
       
-      <div className="flex items-center justify-between mt-3">
+      <div className="flex items-center justify-between mt-1">
         <div className="flex items-center gap-1">
           <Checkbox 
             id={`complete-${contact.id}`}
             checked={contact.isCompleted}
             onCheckedChange={handleCompleteChange}
+            className="h-3 w-3"
           />
           <label htmlFor={`complete-${contact.id}`} className="text-xs text-gray-500">
-            Complete
+            Done
           </label>
         </div>
         
         {contact.responsiblePerson ? (
           <Badge 
             style={{ backgroundColor: contact.responsiblePerson.color }}
-            className="text-white"
+            className="text-white text-[0.65rem] py-0 px-1.5 h-4"
           >
             {contact.responsiblePerson.name}
           </Badge>
         ) : (
           <Select onValueChange={handleResponsibleChange}>
-            <SelectTrigger className="w-[120px] h-7 text-xs">
+            <SelectTrigger className="w-[80px] h-5 text-xs">
               <SelectValue placeholder="Assign" />
             </SelectTrigger>
             <SelectContent>
               {responsiblePersons.map((person) => (
-                <SelectItem key={person.id} value={person.id}>
+                <SelectItem key={person.id} value={person.id} className="text-xs">
                   {person.name}
                 </SelectItem>
               ))}

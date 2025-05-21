@@ -65,23 +65,23 @@ const ProgressTrackers = () => {
           <p className="text-xs text-gray-500 mt-2">Goal: {goalTotalRequests} by August 1, 2025</p>
         </div>
         
-        {/* Weekly Nudging Tracker */}
-        <div className="bg-gradient-to-r from-dashboard-softPurple to-white p-4 rounded-md shadow-sm border border-dashboard-border">
+        {/* Weekly Nudging Tracker - Using less prominent colors */}
+        <div className="bg-gradient-to-r from-[#F1F0FB] to-white p-4 rounded-md shadow-sm border border-dashboard-border">
           <div className="flex justify-between items-center mb-2">
             <h3 className="text-lg font-medium text-dashboard-heading">Weekly Nudging</h3>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-dashboard-purple font-bold">{currentWeekNudges}/{goalWeeklyNudges}</span>
+              <span className="text-sm text-gray-600 font-bold">{currentWeekNudges}/{goalWeeklyNudges}</span>
               <Button 
                 size="sm" 
                 variant="ghost" 
-                className="h-7 w-7 p-0 hover:bg-dashboard-purple/10"
+                className="h-7 w-7 p-0 hover:bg-gray-100"
                 onClick={handleNudgeClick}
               >
-                <Plus className="h-4 w-4 text-dashboard-purple" />
+                <Plus className="h-4 w-4 text-gray-500" />
               </Button>
             </div>
           </div>
-          <Progress value={weeklyNudgesProgress} className="h-3 mb-1" variant="purple" />
+          <Progress value={weeklyNudgesProgress} className="h-3 mb-1" variant="default" />
           <p className="text-xs text-gray-500 mt-2">
             Current Week: {currentWeekNumber}, resets every Monday
           </p>
@@ -93,7 +93,7 @@ const ProgressTrackers = () => {
                   <Progress 
                     value={(nudge.count / goalWeeklyNudges) * 100} 
                     className="h-1.5 mb-1 opacity-50" 
-                    variant="purple" 
+                    variant="default" 
                   />
                   <span className="text-[0.65rem] text-gray-400">{`W${nudge.week}`}</span>
                 </div>

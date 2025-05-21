@@ -1,10 +1,9 @@
 
 import React from 'react';
-import { useDashboard, DashboardProvider } from '@/context/DashboardContext';
+import { useDashboard } from '@/context/DashboardContext';
 import { 
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
@@ -150,13 +149,9 @@ const TablesContent: React.FC = () => {
   );
 };
 
-// Wrap the component with DashboardProvider
-const Tables: React.FC = () => {
-  return (
-    <DashboardProvider>
-      <TablesContent />
-    </DashboardProvider>
-  );
-};
+// The Tables component is just a wrapper that provides the DashboardContext
+const Tables: React.FC = () => (
+  <TablesContent />
+);
 
 export default Tables;
