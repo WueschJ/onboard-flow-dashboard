@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { RequestItem, ResponsiblePerson } from '@/types/dashboard';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +11,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useDashboard } from '@/context/DashboardContext';
+import { PlusCircle, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 interface RequestCardProps {
   request: RequestItem;
@@ -21,11 +24,30 @@ const RequestCard: React.FC<RequestCardProps> = ({ request, inProcess = false })
   const { 
     assignResponsibleToRequest, 
     markRequestFulfilled,
-    responsiblePersons 
+    responsiblePersons,
+    addCustomResponsiblePerson,
+    removeResponsibleFromRequest
   } = useDashboard();
+  
+  const [showCustomInput, setShowCustomInput] = useState(false);
+  const [customName, setCustomName] = useState("");
 
   const handleResponsibleChange = (value: string) => {
+    if (value === 'custom') {
+      setShowCustomInput(true);
+      return;
+    }
+    
     assignResponsibleToRequest(request.id, value);
+  };
+
+  const handleAddCustomPerson = () => {
+    if (customName.trim()) {
+      const newPerson = addCustomResponsiblePerson(customName);
+      assignResponsibleToRequest(request.id, newPerson.id);
+      setCustomName("");
+      setShowCustomInput(false);
+    }
   };
 
   const handleFulfillmentChange = (checked: boolean | 'indeterminate') => {
@@ -33,6 +55,13 @@ const RequestCard: React.FC<RequestCardProps> = ({ request, inProcess = false })
       markRequestFulfilled(request.id);
     }
   };
+
+  const handleRemovePerson = (personId: string) => {
+    removeResponsibleFromRequest(request.id, personId);
+  };
+
+  // Can assign another person if there's less than 2 responsible persons
+  const canAssignAnother = request.responsiblePersons.length < 2;
 
   return (
     <div className="bg-white p-4 rounded-md shadow-sm border border-dashboard-border animate-fade-in">
@@ -53,32 +82,67 @@ const RequestCard: React.FC<RequestCardProps> = ({ request, inProcess = false })
             />
           )}
           
-          {request.responsiblePersons.length > 0 ? (
-            <div className="flex gap-1">
-              {request.responsiblePersons.map((person) => (
+          <div className="flex flex-wrap gap-1 items-center">
+            {request.responsiblePersons.map((person) => (
+              <div key={person.id} className="flex items-center">
                 <Badge 
-                  key={person.id} 
                   style={{ backgroundColor: person.color }}
-                  className="text-white"
+                  className="text-white flex items-center gap-1"
                 >
                   {person.name}
+                  <button 
+                    onClick={() => handleRemovePerson(person.id)}
+                    className="ml-1 hover:bg-white/20 rounded-full p-[2px]"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
                 </Badge>
-              ))}
-            </div>
-          ) : (
-            <Select onValueChange={handleResponsibleChange}>
-              <SelectTrigger className="w-[120px] h-7 text-xs">
-                <SelectValue placeholder="Assign" />
-              </SelectTrigger>
-              <SelectContent>
-                {responsiblePersons.map((person) => (
-                  <SelectItem key={person.id} value={person.id}>
-                    {person.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
+              </div>
+            ))}
+            
+            {canAssignAnother && !showCustomInput && (
+              <Select onValueChange={handleResponsibleChange}>
+                <SelectTrigger className="w-[120px] h-7 text-xs">
+                  <SelectValue placeholder="Assign" />
+                </SelectTrigger>
+                <SelectContent>
+                  {responsiblePersons.map((person) => (
+                    <SelectItem key={person.id} value={person.id}>
+                      {person.name}
+                    </SelectItem>
+                  ))}
+                  <SelectItem value="custom">Custom Person...</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+
+            {showCustomInput && (
+              <div className="flex items-center gap-1">
+                <Input 
+                  className="h-7 w-24 text-xs"
+                  placeholder="Name"
+                  value={customName}
+                  onChange={(e) => setCustomName(e.target.value)}
+                />
+                <Button 
+                  size="icon" 
+                  variant="ghost" 
+                  className="h-7 w-7"
+                  onClick={handleAddCustomPerson}
+                >
+                  <PlusCircle className="h-4 w-4" />
+                </Button>
+                <Button 
+                  size="icon" 
+                  variant="ghost" 
+                  className="h-7 w-7"
+                  onClick={() => setShowCustomInput(false)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

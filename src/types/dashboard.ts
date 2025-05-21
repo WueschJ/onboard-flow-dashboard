@@ -41,3 +41,9 @@ export type OnboardingContact = {
   company: string;
   responsiblePerson?: ResponsiblePerson;
 };
+
+export type WeeklyNudge = {
+  week: number;
+  count: number;
+  year: number;
+};

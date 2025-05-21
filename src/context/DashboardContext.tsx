@@ -5,7 +5,8 @@ import {
   JoinerItem, 
   FulfillRequestItem, 
   OnboardingContact,
-  ResponsiblePerson 
+  ResponsiblePerson,
+  WeeklyNudge
 } from '../types/dashboard';
 
 type DashboardContextType = {
@@ -18,28 +19,60 @@ type DashboardContextType = {
   fulfilledRequests: RequestItem[];
   recentJoiners: JoinerItem[];
   responsiblePersons: ResponsiblePerson[];
+  weeklyNudges: WeeklyNudge[];
+  weeklyStats: {
+    newRequests: number;
+    newJoiners: number;
+    requestsGranted: number;
+  };
+  totalRequestsGranted: number;
   addNewRequest: (request: Omit<RequestItem, 'id' | 'isFulfilled' | 'responsiblePersons'>) => void;
   addNewJoiner: (joiner: Omit<JoinerItem, 'id' | 'isInAppNotificationSent' | 'isEmailNotificationSent'>) => void;
   addMotiusAsk: (ask: Omit<RequestItem, 'id' | 'isFulfilled' | 'responsiblePersons'>) => void;
   addOnboardingContact: (contact: Omit<OnboardingContact, 'id'>) => void;
   assignResponsibleToRequest: (requestId: string, personId: string) => void;
+  removeResponsibleFromRequest: (requestId: string, personId: string) => void;
   assignResponsibleToJoiner: (joinerId: string, personId: string) => void;
   markRequestFulfilled: (requestId: string) => void;
   toggleJoinerInAppNotification: (joinerId: string) => void;
   toggleJoinerEmailNotification: (joinerId: string) => void;
   completeFulfillRequest: (requestId: string) => void;
+  addCustomResponsiblePerson: (name: string) => ResponsiblePerson;
+  addWeeklyNudge: () => void;
 };
 
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
 
-// Sample data for responsible persons
+// Get the current week number
+const getWeekNumber = () => {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 1);
+  const diff = now.getTime() - start.getTime();
+  const oneWeek = 604800000; 
+  return Math.ceil(diff / oneWeek);
+};
+
+// Get current date as human-readable string
+const getCurrentDateString = () => {
+  return new Date().toLocaleDateString('en-US', { 
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+};
+
+// Sample data for responsible persons - including the required names
 const initialResponsiblePersons: ResponsiblePerson[] = [
-  { id: '1', name: 'Alice Johnson', color: '#3E7BFA' },
-  { id: '2', name: 'Bob Smith', color: '#10B981' },
-  { id: '3', name: 'Carol Davis', color: '#F59E0B' },
-  { id: '4', name: 'Dave Wilson', color: '#EC4899' },
-  { id: '5', name: 'Eve Brown', color: '#8B5CF6' },
+  { id: '1', name: 'Marie', color: '#3E7BFA' },
+  { id: '2', name: 'Noah', color: '#10B981' },
+  { id: '3', name: 'Chris', color: '#F59E0B' },
+  { id: '4', name: 'Zied', color: '#EC4899' },
+  { id: '5', name: 'Johanna', color: '#8B5CF6' },
 ];
+
+// Sample color array for custom people
+const personColors = ['#3E7BFA', '#10B981', '#F59E0B', '#EC4899', '#8B5CF6', '#6366F1', '#D946EF', '#F43F5E'];
 
 // Sample data for initial state
 const initialNewRequests: RequestItem[] = [
@@ -97,6 +130,14 @@ const initialMotiusAsks: RequestItem[] = [
   }
 ];
 
+const initialWeeklyNudges: WeeklyNudge[] = [
+  {
+    week: getWeekNumber(),
+    count: 0,
+    year: new Date().getFullYear()
+  }
+];
+
 export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [newRequests, setNewRequests] = useState<RequestItem[]>(initialNewRequests);
   const [requestsInProcess, setRequestsInProcess] = useState<RequestItem[]>([]);
@@ -106,7 +147,10 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [onboardingList, setOnboardingList] = useState<OnboardingContact[]>([]);
   const [fulfilledRequests, setFulfilledRequests] = useState<RequestItem[]>([]);
   const [recentJoiners, setRecentJoiners] = useState<JoinerItem[]>([]);
-  const [responsiblePersons] = useState<ResponsiblePerson[]>(initialResponsiblePersons);
+  const [responsiblePersons, setResponsiblePersons] = useState<ResponsiblePerson[]>(initialResponsiblePersons);
+  const [weeklyNudges, setWeeklyNudges] = useState<WeeklyNudge[]>(initialWeeklyNudges);
+  const [weeklyStats, setWeeklyStats] = useState({ newRequests: 0, newJoiners: 0, requestsGranted: 0 });
+  const [totalRequestsGranted, setTotalRequestsGranted] = useState(0);
 
   // Generate Fulfill Requests based on New Requests
   useEffect(() => {
@@ -129,6 +173,9 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       isFulfilled: false
     };
     setNewRequests(prev => [...prev, newRequest]);
+    
+    // Update weekly stats
+    setWeeklyStats(prev => ({ ...prev, newRequests: prev.newRequests + 1 }));
   };
 
   // Add a new joiner
@@ -140,6 +187,9 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       isEmailNotificationSent: false
     };
     setNewJoiners(prev => [...prev, newJoiner]);
+    
+    // Update weekly stats
+    setWeeklyStats(prev => ({ ...prev, newJoiners: prev.newJoiners + 1 }));
   };
 
   // Add a Motius ask
@@ -176,6 +226,11 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
 
     if (!requestFound) return;
+    
+    // Don't add if already assigned
+    if (requestFound.responsiblePersons.some(p => p.id === person.id)) {
+      return;
+    }
 
     const updatedRequestWithPerson = {
       ...requestFound,
@@ -195,6 +250,32 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         r.id === requestId ? updatedRequestWithPerson : r
       );
       setRequestsInProcess(updatedRequestsInProcess);
+    }
+  };
+
+  // Remove a responsible person from a request
+  const removeResponsibleFromRequest = (requestId: string, personId: string) => {
+    // Only look in requestsInProcess since responsible persons are only in that list
+    const request = requestsInProcess.find(r => r.id === requestId);
+    if (!request) return;
+
+    const updatedRequestWithoutPerson = {
+      ...request,
+      responsiblePersons: request.responsiblePersons.filter(p => p.id !== personId)
+    };
+
+    // If no responsible persons left, move back to new requests
+    if (updatedRequestWithoutPerson.responsiblePersons.length === 0) {
+      // Remove from requests in process
+      setRequestsInProcess(prev => prev.filter(r => r.id !== requestId));
+      
+      // Add to new requests
+      setNewRequests(prev => [...prev, updatedRequestWithoutPerson]);
+    } else {
+      // Update in requests in process
+      setRequestsInProcess(prev => prev.map(r => 
+        r.id === requestId ? updatedRequestWithoutPerson : r
+      ));
     }
   };
 
@@ -219,6 +300,10 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     
     // Remove from requests in process
     setRequestsInProcess(prev => prev.filter(r => r.id !== requestId));
+
+    // Update tracking statistics
+    setTotalRequestsGranted(prev => prev + 1);
+    setWeeklyStats(prev => ({ ...prev, requestsGranted: prev.requestsGranted + 1 }));
   };
 
   // Toggle in-app notification status for a joiner
@@ -266,6 +351,46 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setFulfillRequests(prev => prev.filter(r => r.id !== requestId));
   };
 
+  // Add a custom responsible person
+  const addCustomResponsiblePerson = (name: string): ResponsiblePerson => {
+    const randomColor = personColors[Math.floor(Math.random() * personColors.length)];
+    const newPerson: ResponsiblePerson = {
+      id: Date.now().toString(),
+      name,
+      color: randomColor
+    };
+    
+    setResponsiblePersons(prev => [...prev, newPerson]);
+    return newPerson;
+  };
+
+  // Add a weekly nudge
+  const addWeeklyNudge = () => {
+    const currentWeek = getWeekNumber();
+    const currentYear = new Date().getFullYear();
+    
+    // Find if we have an entry for this week
+    const existingWeek = weeklyNudges.find(nudge => 
+      nudge.week === currentWeek && nudge.year === currentYear
+    );
+    
+    if (existingWeek) {
+      // Update existing week count
+      setWeeklyNudges(prev => prev.map(nudge => 
+        nudge.week === currentWeek && nudge.year === currentYear
+          ? { ...nudge, count: nudge.count + 1 }
+          : nudge
+      ));
+    } else {
+      // Create new week entry
+      setWeeklyNudges(prev => [...prev, {
+        week: currentWeek,
+        count: 1,
+        year: currentYear
+      }]);
+    }
+  };
+
   return (
     <DashboardContext.Provider
       value={{
@@ -278,16 +403,22 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         fulfilledRequests,
         recentJoiners,
         responsiblePersons,
+        weeklyNudges,
+        weeklyStats,
+        totalRequestsGranted,
         addNewRequest,
         addNewJoiner,
         addMotiusAsk,
         addOnboardingContact,
         assignResponsibleToRequest,
+        removeResponsibleFromRequest,
         assignResponsibleToJoiner,
         markRequestFulfilled,
         toggleJoinerInAppNotification,
         toggleJoinerEmailNotification,
         completeFulfillRequest,
+        addCustomResponsiblePerson,
+        addWeeklyNudge
       }}
     >
       {children}
