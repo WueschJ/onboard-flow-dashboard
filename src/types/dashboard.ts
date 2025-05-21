@@ -49,3 +49,10 @@ export type WeeklyNudge = {
   count: number;
   year: number;
 };
+
+export type NewsItem = {
+  id: string;
+  personName: string;
+  content: string;
+  date: string;
+};
