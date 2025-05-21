@@ -5,7 +5,8 @@ import {
   FulfillRequestItem, 
   OnboardingContact,
   ResponsiblePerson,
-  WeeklyNudge
+  WeeklyNudge,
+  NewsItem
 } from '../types/dashboard';
 
 type DashboardContextType = {
@@ -25,6 +26,10 @@ type DashboardContextType = {
     requestsGranted: number;
   };
   totalRequestsGranted: number;
+  newsItems: NewsItem[];
+  addNewsItem: (news: Omit<NewsItem, 'id'>) => void;
+  updateNewsItem: (news: NewsItem) => void;
+  deleteNewsItem: (newsId: string) => void;
   addNewRequest: (request: Omit<RequestItem, 'id' | 'isFulfilled' | 'responsiblePersons'>) => void;
   addNewJoiner: (joiner: Omit<JoinerItem, 'id' | 'isInAppNotificationSent' | 'isEmailNotificationSent' | 'creationDate'>) => void;
   addMotiusAsk: (ask: Omit<RequestItem, 'id' | 'isFulfilled' | 'responsiblePersons'>) => void;
@@ -165,6 +170,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [weeklyNudges, setWeeklyNudges] = useState<WeeklyNudge[]>(initialWeeklyNudges);
   const [weeklyStats, setWeeklyStats] = useState({ newRequests: 0, newJoiners: 0, requestsGranted: 0 });
   const [totalRequestsGranted, setTotalRequestsGranted] = useState(0);
+  const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
 
   // Generate Fulfill Requests based on New Requests and Requests in Process
   useEffect(() => {
@@ -546,6 +552,27 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setNewJoiners(prev => prev.filter(j => j.id !== joinerId));
   };
 
+  // Add a news item
+  const addNewsItem = (news: Omit<NewsItem, 'id'>) => {
+    const newItem: NewsItem = {
+      id: Date.now().toString(),
+      ...news
+    };
+    setNewsItems(prev => [...prev, newItem]);
+  };
+
+  // Update a news item
+  const updateNewsItem = (news: NewsItem) => {
+    setNewsItems(prev => prev.map(item => 
+      item.id === news.id ? news : item
+    ));
+  };
+
+  // Delete a news item
+  const deleteNewsItem = (newsId: string) => {
+    setNewsItems(prev => prev.filter(item => item.id !== newsId));
+  };
+
   return (
     <DashboardContext.Provider
       value={{
@@ -561,6 +588,10 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         weeklyNudges,
         weeklyStats,
         totalRequestsGranted,
+        newsItems,
+        addNewsItem,
+        updateNewsItem,
+        deleteNewsItem,
         addNewRequest,
         addNewJoiner,
         addMotiusAsk,
