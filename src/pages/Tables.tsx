@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useDashboard } from '@/context/DashboardContext';
 import { 
   Table,
@@ -11,12 +11,37 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, MoreHorizontal, Edit, Trash2, RefreshCw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { RequestItem, JoinerItem } from '@/types/dashboard';
 
 const Tables: React.FC = () => {
-  const { fulfilledRequests, recentJoiners } = useDashboard();
+  const { 
+    fulfilledRequests, 
+    recentJoiners, 
+    updateFulfilledRequest, 
+    deleteFulfilledRequest, 
+    updateRecentJoiner,
+    deleteRecentJoiner,
+    returnRequestToProcess,
+    returnJoinerToBoard
+  } = useDashboard();
+
+  const [editingRequest, setEditingRequest] = useState<RequestItem | null>(null);
+  const [editingJoiner, setEditingJoiner] = useState<JoinerItem | null>(null);
+  const [isDeleteRequestDialogOpen, setIsDeleteRequestDialogOpen] = useState(false);
+  const [isDeleteJoinerDialogOpen, setIsDeleteJoinerDialogOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<string>('');
 
   // Format the date from ISO string
   const formatDate = (dateString: string) => {
@@ -25,6 +50,48 @@ const Tables: React.FC = () => {
     } catch (error) {
       return dateString;
     }
+  };
+
+  const handleEditRequest = (request: RequestItem) => {
+    setEditingRequest({...request});
+  };
+
+  const handleSaveRequestEdit = () => {
+    if (editingRequest) {
+      updateFulfilledRequest(editingRequest);
+      setEditingRequest(null);
+    }
+  };
+
+  const handleDeleteRequest = (id: string) => {
+    setItemToDelete(id);
+    setIsDeleteRequestDialogOpen(true);
+  };
+
+  const confirmDeleteRequest = () => {
+    deleteFulfilledRequest(itemToDelete);
+    setIsDeleteRequestDialogOpen(false);
+  };
+
+  const handleEditJoiner = (joiner: JoinerItem) => {
+    setEditingJoiner({...joiner});
+  };
+
+  const handleSaveJoinerEdit = () => {
+    if (editingJoiner) {
+      updateRecentJoiner(editingJoiner);
+      setEditingJoiner(null);
+    }
+  };
+
+  const handleDeleteJoiner = (id: string) => {
+    setItemToDelete(id);
+    setIsDeleteJoinerDialogOpen(true);
+  };
+
+  const confirmDeleteJoiner = () => {
+    deleteRecentJoiner(itemToDelete);
+    setIsDeleteJoinerDialogOpen(false);
   };
 
   return (
@@ -56,12 +123,13 @@ const Tables: React.FC = () => {
                     <TableHead>Date</TableHead>
                     <TableHead>Note</TableHead>
                     <TableHead>Responsible Persons</TableHead>
+                    <TableHead className="w-[100px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {fulfilledRequests.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                      <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                         No fulfilled requests yet
                       </TableCell>
                     </TableRow>
@@ -88,6 +156,29 @@ const Tables: React.FC = () => {
                             ))}
                           </div>
                         </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleEditRequest(request)}>
+                                <Edit className="mr-2 h-4 w-4" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleDeleteRequest(request.id)}>
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => returnRequestToProcess(request.id)}>
+                                <RefreshCw className="mr-2 h-4 w-4" />
+                                Return to Board
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
                       </TableRow>
                     ))
                   )}
@@ -108,12 +199,13 @@ const Tables: React.FC = () => {
                     <TableHead>Email</TableHead>
                     <TableHead>Join Date</TableHead>
                     <TableHead>Responsible Person</TableHead>
+                    <TableHead className="w-[100px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {recentJoiners.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                      <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                         No recent joiners yet
                       </TableCell>
                     </TableRow>
@@ -136,6 +228,29 @@ const Tables: React.FC = () => {
                             <span className="text-muted-foreground">None assigned</span>
                           )}
                         </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleEditJoiner(joiner)}>
+                                <Edit className="mr-2 h-4 w-4" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleDeleteJoiner(joiner.id)}>
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => returnJoinerToBoard(joiner.id)}>
+                                <RefreshCw className="mr-2 h-4 w-4" />
+                                Return to Board
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
                       </TableRow>
                     ))
                   )}
@@ -145,6 +260,173 @@ const Tables: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Edit Request Dialog */}
+      <Dialog open={!!editingRequest} onOpenChange={(open) => !open && setEditingRequest(null)}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Edit Fulfilled Request</DialogTitle>
+          </DialogHeader>
+          {editingRequest && (
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <label htmlFor="request-text" className="text-right text-sm font-medium">
+                  Request
+                </label>
+                <Input
+                  id="request-text"
+                  value={editingRequest.requestText}
+                  onChange={(e) => setEditingRequest({...editingRequest, requestText: e.target.value})}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <label htmlFor="person-name" className="text-right text-sm font-medium">
+                  Name
+                </label>
+                <Input
+                  id="person-name"
+                  value={editingRequest.personName}
+                  onChange={(e) => setEditingRequest({...editingRequest, personName: e.target.value})}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <label htmlFor="email" className="text-right text-sm font-medium">
+                  Email
+                </label>
+                <Input
+                  id="email"
+                  value={editingRequest.email}
+                  onChange={(e) => setEditingRequest({...editingRequest, email: e.target.value})}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <label htmlFor="note" className="text-right text-sm font-medium">
+                  Note
+                </label>
+                <Textarea
+                  id="note"
+                  value={editingRequest.note}
+                  onChange={(e) => setEditingRequest({...editingRequest, note: e.target.value})}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <label htmlFor="date" className="text-right text-sm font-medium">
+                  Date
+                </label>
+                <Input
+                  id="date"
+                  type="date"
+                  value={editingRequest.date}
+                  onChange={(e) => setEditingRequest({...editingRequest, date: e.target.value})}
+                  className="col-span-3"
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingRequest(null)}>Cancel</Button>
+            <Button onClick={handleSaveRequestEdit}>Save changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Joiner Dialog */}
+      <Dialog open={!!editingJoiner} onOpenChange={(open) => !open && setEditingJoiner(null)}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Edit Recent Joiner</DialogTitle>
+          </DialogHeader>
+          {editingJoiner && (
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <label htmlFor="joiner-name" className="text-right text-sm font-medium">
+                  Name
+                </label>
+                <Input
+                  id="joiner-name"
+                  value={editingJoiner.name}
+                  onChange={(e) => setEditingJoiner({...editingJoiner, name: e.target.value})}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <label htmlFor="company" className="text-right text-sm font-medium">
+                  Company
+                </label>
+                <Input
+                  id="company"
+                  value={editingJoiner.company}
+                  onChange={(e) => setEditingJoiner({...editingJoiner, company: e.target.value})}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <label htmlFor="joiner-email" className="text-right text-sm font-medium">
+                  Email
+                </label>
+                <Input
+                  id="joiner-email"
+                  value={editingJoiner.email}
+                  onChange={(e) => setEditingJoiner({...editingJoiner, email: e.target.value})}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <label htmlFor="creation-date" className="text-right text-sm font-medium">
+                  Join Date
+                </label>
+                <Input
+                  id="creation-date"
+                  type="date"
+                  value={editingJoiner.creationDate.split('T')[0]}
+                  onChange={(e) => setEditingJoiner({...editingJoiner, creationDate: `${e.target.value}T00:00:00.000Z`})}
+                  className="col-span-3"
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingJoiner(null)}>Cancel</Button>
+            <Button onClick={handleSaveJoinerEdit}>Save changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Request Confirmation Dialog */}
+      <Dialog open={isDeleteRequestDialogOpen} onOpenChange={setIsDeleteRequestDialogOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Delete Fulfilled Request</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p>Are you sure you want to delete this request? This action cannot be undone.</p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteRequestDialogOpen(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={confirmDeleteRequest}>Delete</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Joiner Confirmation Dialog */}
+      <Dialog open={isDeleteJoinerDialogOpen} onOpenChange={setIsDeleteJoinerDialogOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Delete Recent Joiner</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p>Are you sure you want to delete this joiner? This action cannot be undone.</p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteJoinerDialogOpen(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={confirmDeleteJoiner}>Delete</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

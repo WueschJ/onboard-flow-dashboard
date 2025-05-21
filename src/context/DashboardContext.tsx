@@ -39,6 +39,18 @@ type DashboardContextType = {
   addCustomResponsiblePerson: (name: string) => ResponsiblePerson;
   addWeeklyNudge: () => void;
   completeOnboardingContact: (contactId: string) => void;
+  updateRequest: (request: RequestItem) => void;
+  deleteRequest: (requestId: string) => void;
+  updateFulfillRequest: (request: FulfillRequestItem) => void;
+  deleteFulfillRequest: (requestId: string) => void;
+  updateFulfilledRequest: (request: RequestItem) => void;
+  deleteFulfilledRequest: (requestId: string) => void;
+  updateRecentJoiner: (joiner: JoinerItem) => void;
+  deleteRecentJoiner: (joinerId: string) => void;
+  returnRequestToProcess: (requestId: string) => void;
+  returnJoinerToBoard: (joinerId: string) => void;
+  updateJoiner: (joiner: JoinerItem) => void;
+  deleteJoiner: (joinerId: string) => void;
 };
 
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
@@ -428,6 +440,16 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setOnboardingList(updatedOnboardingList);
   };
 
+  // Update a joiner in the newJoiners list
+  const updateJoiner = (updatedJoiner: JoinerItem) => {
+    setNewJoiners(prev => prev.map(j => j.id === updatedJoiner.id ? updatedJoiner : j));
+  };
+  
+  // Delete a joiner from the newJoiners list
+  const deleteJoiner = (joinerId: string) => {
+    setNewJoiners(prev => prev.filter(j => j.id !== joinerId));
+  };
+
   return (
     <DashboardContext.Provider
       value={{
@@ -456,7 +478,9 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         completeFulfillRequest,
         addCustomResponsiblePerson,
         addWeeklyNudge,
-        completeOnboardingContact
+        completeOnboardingContact,
+        updateJoiner,
+        deleteJoiner
       }}
     >
       {children}
