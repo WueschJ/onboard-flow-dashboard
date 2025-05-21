@@ -17,9 +17,9 @@ const DashboardLayout: React.FC = () => {
     day: 'numeric'
   });
   
-  const weekNumber = Math.ceil(
-    ((today - new Date(today.getFullYear(), 0, 1)) / 86400000 + 1) / 7
-  );
+  const startOfYear = new Date(today.getFullYear(), 0, 1);
+  const daysSinceStart = Math.floor((today.getTime() - startOfYear.getTime()) / 86400000);
+  const weekNumber = Math.ceil((daysSinceStart + startOfYear.getDay() + 1) / 7);
 
   return (
     <DashboardProvider>
