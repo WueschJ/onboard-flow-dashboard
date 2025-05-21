@@ -50,17 +50,6 @@ const DashboardLayout: React.FC = () => {
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </Link>
                 </Button>
-                <Button 
-                  variant="outline" 
-                  asChild 
-                  size="sm" 
-                  className="hover:bg-dashboard-lightBlue hover:text-dashboard-blue border-dashboard-border"
-                >
-                  <Link to="/backend">
-                    Backend View
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </Link>
-                </Button>
               </div>
             </div>
             
