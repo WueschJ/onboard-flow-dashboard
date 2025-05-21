@@ -32,47 +32,52 @@ const ProgressTrackers: React.FC = () => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
       {/* Overall Progress Tracker */}
-      <Card className="col-span-1 lg:col-span-2">
+      <Card className="col-span-1 lg:col-span-2 border border-dashboard-border hover:shadow-card-hover transition-shadow">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle>Overall Progress Tracker</CardTitle>
+            <CardTitle className="text-dashboard-heading">Overall Progress Tracker</CardTitle>
             <CardDescription>Goal: 30 requests granted by August 1, 2025</CardDescription>
           </div>
-          <Calendar className="h-5 w-5 text-muted-foreground" />
+          <Calendar className="h-5 w-5 text-dashboard-blue" />
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span>Progress</span>
-              <span>{totalRequestsGranted}/30 requests</span>
+              <span className="font-medium">Progress</span>
+              <span className="text-dashboard-blue font-semibold">{totalRequestsGranted}/30 requests</span>
             </div>
-            <Progress value={overallProgress} className="h-2" />
+            <Progress value={overallProgress} variant="blue" className="h-2" />
           </div>
         </CardContent>
       </Card>
 
       {/* Weekly Nudging Tracker */}
-      <Card>
+      <Card className="border border-dashboard-border hover:shadow-card-hover transition-shadow">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle>Weekly Nudging Tracker</CardTitle>
+            <CardTitle className="text-dashboard-heading">Weekly Nudging Tracker</CardTitle>
             <CardDescription>Goal: 10 nudges per week</CardDescription>
           </div>
           <div className="flex items-center gap-2">
-            <Button size="icon" variant="outline" onClick={addWeeklyNudge}>
+            <Button 
+              size="icon" 
+              variant="outline" 
+              onClick={addWeeklyNudge} 
+              className="border-dashboard-purple text-dashboard-purple hover:text-dashboard-purple hover:bg-dashboard-softPurple"
+            >
               <PlusCircle className="h-4 w-4" />
             </Button>
-            <TrendingUp className="h-5 w-5 text-muted-foreground" />
+            <TrendingUp className="h-5 w-5 text-dashboard-purple" />
           </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span>Current Week</span>
-                <span>{currentWeekNudge.count}/10 nudges</span>
+                <span className="font-medium">Current Week</span>
+                <span className="text-dashboard-purple font-semibold">{currentWeekNudge.count}/10 nudges</span>
               </div>
-              <Progress value={nudgingProgress} className="h-2" />
+              <Progress value={nudgingProgress} variant="purple" className="h-2" />
             </div>
             
             {/* Previous Weeks */}
@@ -84,6 +89,7 @@ const ProgressTrackers: React.FC = () => {
                 </div>
                 <Progress 
                   value={Math.min(Math.round((week.count / 10) * 100), 100)} 
+                  variant="purple"
                   className="h-1 opacity-50" 
                 />
               </div>
@@ -93,35 +99,35 @@ const ProgressTrackers: React.FC = () => {
       </Card>
 
       {/* Weekly Metrics Tracker */}
-      <Card>
+      <Card className="border border-dashboard-border hover:shadow-card-hover transition-shadow">
         <CardHeader>
-          <CardTitle>Weekly Metrics</CardTitle>
+          <CardTitle className="text-dashboard-heading">Weekly Metrics</CardTitle>
           <CardDescription>Goal: 3 of each per week</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span>New Requests</span>
-                <span>{weeklyStats.newRequests}/3</span>
+                <span className="font-medium">New Requests</span>
+                <span className="text-dashboard-amber font-semibold">{weeklyStats.newRequests}/3</span>
               </div>
-              <Progress value={weeklyNewRequestsProgress} className="h-2" />
+              <Progress value={weeklyNewRequestsProgress} variant="amber" className="h-2" />
             </div>
             
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span>New Joiners</span>
-                <span>{weeklyStats.newJoiners}/3</span>
+                <span className="font-medium">New Joiners</span>
+                <span className="text-dashboard-green font-semibold">{weeklyStats.newJoiners}/3</span>
               </div>
-              <Progress value={weeklyJoinersProgress} className="h-2" />
+              <Progress value={weeklyJoinersProgress} variant="green" className="h-2" />
             </div>
             
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span>Requests Granted</span>
-                <span>{weeklyStats.requestsGranted}/3</span>
+                <span className="font-medium">Requests Granted</span>
+                <span className="text-dashboard-blue font-semibold">{weeklyStats.requestsGranted}/3</span>
               </div>
-              <Progress value={weeklyRequestsProgress} className="h-2" />
+              <Progress value={weeklyRequestsProgress} variant="blue" className="h-2" />
             </div>
           </div>
         </CardContent>

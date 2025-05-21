@@ -66,11 +66,16 @@ export default {
 				dashboard: {
 					blue: '#3E7BFA',
 					lightBlue: '#EBF2FF',
+					purple: '#9b87f5',
+					softPurple: '#E5DEFF',
+					green: '#10B981',
+					amber: '#F59E0B',
 					gray: '#F5F5F5',
 					lightGray: '#FAFAFA',
 					border: '#E5E7EB',
 					text: '#4B5563',
-					heading: '#111827'
+					heading: '#111827',
+					cardHover: '#F9FAFB'
 				}
 			},
 			borderRadius: {
@@ -105,12 +110,24 @@ export default {
 					  transform: 'translateY(0)'
 					}
 				},
+				'pulse-soft': {
+					'0%, 100%': {
+						opacity: '1',
+					},
+					'50%': {
+						opacity: '0.8',
+					},
+				},
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'fade-in': 'fade-in 0.3s ease-out',
-			}
+				'pulse-soft': 'pulse-soft 2s infinite',
+			},
+			boxShadow: {
+				'card-hover': '0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03)',
+			},
 		}
 	},
 	plugins: [require("tailwindcss-animate")],

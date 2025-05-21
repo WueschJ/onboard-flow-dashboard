@@ -23,20 +23,27 @@ const DashboardLayout: React.FC = () => {
 
   return (
     <DashboardProvider>
-      <div className="bg-dashboard-gray min-h-screen p-4 md:p-6 lg:p-8">
+      <div className="bg-gradient-to-b from-white to-dashboard-gray min-h-screen p-4 md:p-6 lg:p-8">
         <div className="max-w-7xl mx-auto space-y-8">
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-lg shadow-md p-6 border border-dashboard-border">
             <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-6 gap-4">
               <div>
-                <h1 className="text-3xl font-bold text-dashboard-heading">Cliq Operations</h1>
+                <h1 className="text-3xl font-bold text-dashboard-heading bg-gradient-to-r from-dashboard-blue to-dashboard-purple bg-clip-text text-transparent">
+                  Cliq Operations
+                </h1>
                 <div className="flex items-center text-sm text-gray-500 mt-1">
                   <span>{formattedDate}</span>
-                  <span className="mx-2">•</span>
-                  <span>Week {weekNumber}</span>
+                  <span className="mx-2 text-dashboard-blue">•</span>
+                  <span className="text-dashboard-purple font-medium">Week {weekNumber}</span>
                 </div>
               </div>
               
-              <Button variant="outline" asChild size="sm" className="self-end">
+              <Button 
+                variant="outline" 
+                asChild 
+                size="sm" 
+                className="self-end hover:bg-dashboard-lightBlue hover:text-dashboard-blue border-dashboard-border"
+              >
                 <Link to="/backend">
                   Backend View
                   <ArrowRight className="h-4 w-4 ml-2" />
