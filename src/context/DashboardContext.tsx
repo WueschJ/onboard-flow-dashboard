@@ -440,6 +440,102 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setOnboardingList(updatedOnboardingList);
   };
 
+  // Update a request
+  const updateRequest = (request: RequestItem) => {
+    if (request.responsiblePersons.length > 0) {
+      // Update in requests in process
+      setRequestsInProcess(prev => prev.map(r => 
+        r.id === request.id ? request : r
+      ));
+    } else {
+      // Update in new requests or motius asks
+      if (newRequests.some(r => r.id === request.id)) {
+        setNewRequests(prev => prev.map(r => 
+          r.id === request.id ? request : r
+        ));
+      } else {
+        setMotiusAsks(prev => prev.map(r => 
+          r.id === request.id ? request : r
+        ));
+      }
+    }
+  };
+
+  // Delete a request
+  const deleteRequest = (requestId: string) => {
+    // Check which collection the request is in and delete from there
+    if (newRequests.some(r => r.id === requestId)) {
+      setNewRequests(prev => prev.filter(r => r.id !== requestId));
+    } else if (requestsInProcess.some(r => r.id === requestId)) {
+      setRequestsInProcess(prev => prev.filter(r => r.id !== requestId));
+    } else if (motiusAsks.some(r => r.id === requestId)) {
+      setMotiusAsks(prev => prev.filter(r => r.id !== requestId));
+    }
+
+    // Also remove from fulfill requests if it exists there
+    setFulfillRequests(prev => prev.filter(r => r.id !== requestId));
+  };
+
+  // Update a fulfill request
+  const updateFulfillRequest = (request: FulfillRequestItem) => {
+    setFulfillRequests(prev => prev.map(r => 
+      r.id === request.id ? request : r
+    ));
+  };
+
+  // Delete a fulfill request
+  const deleteFulfillRequest = (requestId: string) => {
+    setFulfillRequests(prev => prev.filter(r => r.id !== requestId));
+  };
+
+  // Update a fulfilled request
+  const updateFulfilledRequest = (request: RequestItem) => {
+    setFulfilledRequests(prev => prev.map(r => 
+      r.id === request.id ? request : r
+    ));
+  };
+
+  // Delete a fulfilled request
+  const deleteFulfilledRequest = (requestId: string) => {
+    setFulfilledRequests(prev => prev.filter(r => r.id !== requestId));
+  };
+
+  // Update a recent joiner
+  const updateRecentJoiner = (joiner: JoinerItem) => {
+    setRecentJoiners(prev => prev.map(j => 
+      j.id === joiner.id ? joiner : j
+    ));
+  };
+
+  // Delete a recent joiner
+  const deleteRecentJoiner = (joinerId: string) => {
+    setRecentJoiners(prev => prev.filter(j => j.id !== joinerId));
+  };
+
+  // Return a request back to In Process from Fulfilled
+  const returnRequestToProcess = (requestId: string) => {
+    const request = fulfilledRequests.find(r => r.id === requestId);
+    if (!request) return;
+
+    // Remove from fulfilled requests
+    setFulfilledRequests(prev => prev.filter(r => r.id !== requestId));
+
+    // Add back to requests in process
+    setRequestsInProcess(prev => [...prev, { ...request, isFulfilled: false }]);
+  };
+
+  // Return a joiner back to board from Recent Joiners
+  const returnJoinerToBoard = (joinerId: string) => {
+    const joiner = recentJoiners.find(j => j.id === joinerId);
+    if (!joiner) return;
+
+    // Remove from recent joiners
+    setRecentJoiners(prev => prev.filter(j => j.id !== joinerId));
+
+    // Add back to new joiners
+    setNewJoiners(prev => [...prev, { ...joiner, isInAppNotificationSent: false, isEmailNotificationSent: false }]);
+  };
+
   // Update a joiner in the newJoiners list
   const updateJoiner = (updatedJoiner: JoinerItem) => {
     setNewJoiners(prev => prev.map(j => j.id === updatedJoiner.id ? updatedJoiner : j));
@@ -479,6 +575,16 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         addCustomResponsiblePerson,
         addWeeklyNudge,
         completeOnboardingContact,
+        updateRequest,
+        deleteRequest,
+        updateFulfillRequest,
+        deleteFulfillRequest,
+        updateFulfilledRequest,
+        deleteFulfilledRequest,
+        updateRecentJoiner,
+        deleteRecentJoiner,
+        returnRequestToProcess,
+        returnJoinerToBoard,
         updateJoiner,
         deleteJoiner
       }}
