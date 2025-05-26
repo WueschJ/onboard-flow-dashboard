@@ -12,9 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
-import { format, addDays, parseISO, isAfter } from 'date-fns';
-import { Smartphone, Mail } from 'lucide-react';
 
 interface NominationCardProps {
   nomination: NominationItem;
@@ -24,17 +21,18 @@ const NominationCard: React.FC<NominationCardProps> = ({ nomination }) => {
   const { 
     responsiblePersons, 
     assignResponsibleToNomination,
-    toggleNominationInAppNotification,
-    toggleNominationEmailNotification
+    completeNomination
   } = useDashboard();
 
   const handleResponsibleChange = (value: string) => {
     assignResponsibleToNomination(nomination.id, value);
   };
-  
-  const parsedCreationDate = parseISO(nomination.creationDate);
-  const emailThresholdDate = addDays(parsedCreationDate, 3);
-  const canSendEmail = isAfter(new Date(), emailThresholdDate);
+
+  const handleCompleteChange = (checked: boolean | 'indeterminate') => {
+    if (checked === true) {
+      completeNomination(nomination.id);
+    }
+  };
 
   return (
     <Card className="p-3 border border-dashboard-border hover:shadow-md transition-shadow">
@@ -43,45 +41,17 @@ const NominationCard: React.FC<NominationCardProps> = ({ nomination }) => {
           <div>
             <h4 className="font-medium text-dashboard-heading">{nomination.name}</h4>
             <p className="text-sm text-gray-600">{nomination.company}</p>
-            <p className="text-xs text-gray-500">{nomination.email}</p>
           </div>
           
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1">
-                <Checkbox 
-                  id={`inapp-${nomination.id}`}
-                  checked={nomination.isInAppNotificationSent}
-                  onCheckedChange={() => toggleNominationInAppNotification(nomination.id)}
-                />
-                <label htmlFor={`inapp-${nomination.id}`} className="flex items-center text-gray-500">
-                  <Smartphone className="h-3.5 w-3.5" />
-                </label>
-              </div>
-              
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="flex items-center gap-1">
-                      <Checkbox 
-                        id={`email-${nomination.id}`}
-                        checked={nomination.isEmailNotificationSent}
-                        onCheckedChange={() => toggleNominationEmailNotification(nomination.id)}
-                        disabled={!canSendEmail}
-                        className={!canSendEmail ? "opacity-50 cursor-not-allowed" : ""}
-                      />
-                      <label htmlFor={`email-${nomination.id}`} className={`flex items-center ${!canSendEmail ? "text-gray-400" : "text-gray-500"}`}>
-                        <Mail className="h-3.5 w-3.5" />
-                      </label>
-                    </div>
-                  </TooltipTrigger>
-                  {!canSendEmail && (
-                    <TooltipContent>
-                      <p>Email can be sent after {format(emailThresholdDate, 'MMM d, yyyy')}</p>
-                    </TooltipContent>
-                  )}
-                </Tooltip>
-              </TooltipProvider>
+            <div className="flex items-center gap-2">
+              <Checkbox 
+                id={`complete-${nomination.id}`}
+                onCheckedChange={handleCompleteChange}
+              />
+              <label htmlFor={`complete-${nomination.id}`} className="text-sm text-gray-600">
+                Completed
+              </label>
             </div>
             
             {nomination.responsiblePerson ? (

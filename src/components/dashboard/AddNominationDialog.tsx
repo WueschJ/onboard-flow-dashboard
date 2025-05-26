@@ -10,6 +10,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useDashboard } from '@/context/DashboardContext';
 
 interface AddNominationDialogProps {
@@ -23,24 +30,24 @@ const AddNominationDialog: React.FC<AddNominationDialogProps> = ({
 }) => {
   const [name, setName] = useState('');
   const [company, setCompany] = useState('');
-  const [email, setEmail] = useState('');
+  const [responsiblePersonId, setResponsiblePersonId] = useState<string>('');
   
-  const { addNomination } = useDashboard();
+  const { addNomination, responsiblePersons } = useDashboard();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (name && company && email) {
+    if (name && company) {
       addNomination({
         name,
         company,
-        email
-      });
+        email: '' // Keep email as empty string to match the type
+      }, responsiblePersonId || undefined);
       
       // Reset form
       setName('');
       setCompany('');
-      setEmail('');
+      setResponsiblePersonId('');
       onOpenChange(false);
     }
   };
@@ -73,15 +80,19 @@ const AddNominationDialog: React.FC<AddNominationDialogProps> = ({
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter email"
-              required
-            />
+            <Label htmlFor="responsible">Responsible Person (Optional)</Label>
+            <Select value={responsiblePersonId} onValueChange={setResponsiblePersonId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select responsible person" />
+              </SelectTrigger>
+              <SelectContent>
+                {responsiblePersons.map((person) => (
+                  <SelectItem key={person.id} value={person.id}>
+                    {person.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

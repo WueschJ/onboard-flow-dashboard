@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { 
   RequestItem, 
@@ -34,7 +35,7 @@ type DashboardContextType = {
   deleteNewsItem: (newsId: string) => void;
   addNewRequest: (request: Omit<RequestItem, 'id' | 'isFulfilled' | 'responsiblePersons'>) => void;
   addNewJoiner: (joiner: Omit<JoinerItem, 'id' | 'isInAppNotificationSent' | 'isEmailNotificationSent' | 'creationDate'>) => void;
-  addNomination: (nomination: Omit<NominationItem, 'id' | 'isInAppNotificationSent' | 'isEmailNotificationSent' | 'creationDate'>) => void;
+  addNomination: (nomination: Omit<NominationItem, 'id' | 'isInAppNotificationSent' | 'isEmailNotificationSent' | 'creationDate'>, responsiblePersonId?: string) => void;
   addMotiusAsk: (ask: Omit<RequestItem, 'id' | 'isFulfilled' | 'responsiblePersons'>) => void;
   addOnboardingContact: (contact: Omit<OnboardingContact, 'id' | 'isCompleted'>, responsiblePersonId?: string) => void;
   assignResponsibleToRequest: (requestId: string, personId: string, isMotiusAsk?: boolean) => void;
@@ -50,6 +51,7 @@ type DashboardContextType = {
   addCustomResponsiblePerson: (name: string) => ResponsiblePerson;
   addWeeklyNudge: () => void;
   completeOnboardingContact: (contactId: string) => void;
+  completeNomination: (nominationId: string) => void;
   updateRequest: (request: RequestItem) => void;
   deleteRequest: (requestId: string) => void;
   updateFulfillRequest: (request: FulfillRequestItem) => void;
@@ -98,6 +100,25 @@ const initialResponsiblePersons: ResponsiblePerson[] = [
 
 // Sample color array for custom people
 const personColors = ['#3E7BFA', '#10B981', '#F59E0B', '#EC4899', '#8B5CF6', '#6366F1', '#D946EF', '#F43F5E'];
+
+// Load data from localStorage
+const loadFromStorage = (key: string, defaultValue: any) => {
+  try {
+    const saved = localStorage.getItem(key);
+    return saved ? JSON.parse(saved) : defaultValue;
+  } catch {
+    return defaultValue;
+  }
+};
+
+// Save data to localStorage
+const saveToStorage = (key: string, data: any) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch {
+    // Ignore storage errors
+  }
+};
 
 // Sample data for initial state
 const initialNewRequests: RequestItem[] = [
@@ -178,20 +199,105 @@ const initialNominations: NominationItem[] = [
 ];
 
 export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [newRequests, setNewRequests] = useState<RequestItem[]>(initialNewRequests);
-  const [requestsInProcess, setRequestsInProcess] = useState<RequestItem[]>([]);
-  const [newJoiners, setNewJoiners] = useState<JoinerItem[]>(initialNewJoiners);
-  const [nominations, setNominations] = useState<NominationItem[]>(initialNominations);
-  const [fulfillRequests, setFulfillRequests] = useState<FulfillRequestItem[]>([]);
-  const [motiusAsks, setMotiusAsks] = useState<RequestItem[]>(initialMotiusAsks);
-  const [onboardingList, setOnboardingList] = useState<OnboardingContact[]>([]);
-  const [fulfilledRequests, setFulfilledRequests] = useState<RequestItem[]>([]);
-  const [recentJoiners, setRecentJoiners] = useState<JoinerItem[]>([]);
-  const [responsiblePersons, setResponsiblePersons] = useState<ResponsiblePerson[]>(initialResponsiblePersons);
-  const [weeklyNudges, setWeeklyNudges] = useState<WeeklyNudge[]>(initialWeeklyNudges);
-  const [weeklyStats, setWeeklyStats] = useState({ newRequests: 0, newJoiners: 0, requestsGranted: 0 });
-  const [totalRequestsGranted, setTotalRequestsGranted] = useState(0);
-  const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
+  const [newRequests, setNewRequests] = useState<RequestItem[]>(() => 
+    loadFromStorage('newRequests', initialNewRequests)
+  );
+  const [requestsInProcess, setRequestsInProcess] = useState<RequestItem[]>(() => 
+    loadFromStorage('requestsInProcess', [])
+  );
+  const [newJoiners, setNewJoiners] = useState<JoinerItem[]>(() => 
+    loadFromStorage('newJoiners', initialNewJoiners)
+  );
+  const [nominations, setNominations] = useState<NominationItem[]>(() => 
+    loadFromStorage('nominations', initialNominations)
+  );
+  const [fulfillRequests, setFulfillRequests] = useState<FulfillRequestItem[]>(() => 
+    loadFromStorage('fulfillRequests', [])
+  );
+  const [motiusAsks, setMotiusAsks] = useState<RequestItem[]>(() => 
+    loadFromStorage('motiusAsks', initialMotiusAsks)
+  );
+  const [onboardingList, setOnboardingList] = useState<OnboardingContact[]>(() => 
+    loadFromStorage('onboardingList', [])
+  );
+  const [fulfilledRequests, setFulfilledRequests] = useState<RequestItem[]>(() => 
+    loadFromStorage('fulfilledRequests', [])
+  );
+  const [recentJoiners, setRecentJoiners] = useState<JoinerItem[]>(() => 
+    loadFromStorage('recentJoiners', [])
+  );
+  const [responsiblePersons, setResponsiblePersons] = useState<ResponsiblePerson[]>(() => 
+    loadFromStorage('responsiblePersons', initialResponsiblePersons)
+  );
+  const [weeklyNudges, setWeeklyNudges] = useState<WeeklyNudge[]>(() => 
+    loadFromStorage('weeklyNudges', initialWeeklyNudges)
+  );
+  const [weeklyStats, setWeeklyStats] = useState(() => 
+    loadFromStorage('weeklyStats', { newRequests: 0, newJoiners: 0, requestsGranted: 0 })
+  );
+  const [totalRequestsGranted, setTotalRequestsGranted] = useState(() => 
+    loadFromStorage('totalRequestsGranted', 0)
+  );
+  const [newsItems, setNewsItems] = useState<NewsItem[]>(() => 
+    loadFromStorage('newsItems', [])
+  );
+
+  // Save to localStorage whenever state changes
+  useEffect(() => {
+    saveToStorage('newRequests', newRequests);
+  }, [newRequests]);
+
+  useEffect(() => {
+    saveToStorage('requestsInProcess', requestsInProcess);
+  }, [requestsInProcess]);
+
+  useEffect(() => {
+    saveToStorage('newJoiners', newJoiners);
+  }, [newJoiners]);
+
+  useEffect(() => {
+    saveToStorage('nominations', nominations);
+  }, [nominations]);
+
+  useEffect(() => {
+    saveToStorage('fulfillRequests', fulfillRequests);
+  }, [fulfillRequests]);
+
+  useEffect(() => {
+    saveToStorage('motiusAsks', motiusAsks);
+  }, [motiusAsks]);
+
+  useEffect(() => {
+    saveToStorage('onboardingList', onboardingList);
+  }, [onboardingList]);
+
+  useEffect(() => {
+    saveToStorage('fulfilledRequests', fulfilledRequests);
+  }, [fulfilledRequests]);
+
+  useEffect(() => {
+    saveToStorage('recentJoiners', recentJoiners);
+  }, [recentJoiners]);
+
+  useEffect(() => {
+    saveToStorage('responsiblePersons', responsiblePersons);
+  }, [responsiblePersons]);
+
+  useEffect(() => {
+    saveToStorage('weeklyNudges', weeklyNudges);
+  }, [weeklyNudges]);
+
+  useEffect(() => {
+    saveToStorage('weeklyStats', weeklyStats);
+  }, [weeklyStats]);
+
+  useEffect(() => {
+    saveToStorage('totalRequestsGranted', totalRequestsGranted);
+  }, [totalRequestsGranted]);
+
+  useEffect(() => {
+    saveToStorage('newsItems', newsItems);
+  }, [newsItems]);
 
   // Generate Fulfill Requests based on New Requests and Requests in Process
   useEffect(() => {
@@ -243,10 +349,17 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   // Add a nomination
-  const addNomination = (nomination: Omit<NominationItem, 'id' | 'isInAppNotificationSent' | 'isEmailNotificationSent' | 'creationDate'>) => {
+  const addNomination = (nomination: Omit<NominationItem, 'id' | 'isInAppNotificationSent' | 'isEmailNotificationSent' | 'creationDate'>, responsiblePersonId?: string) => {
+    let responsiblePerson: ResponsiblePerson | undefined;
+    
+    if (responsiblePersonId) {
+      responsiblePerson = responsiblePersons.find(p => p.id === responsiblePersonId);
+    }
+    
     const newNomination: NominationItem = {
       id: Date.now().toString(),
       ...nomination,
+      responsiblePerson,
       isInAppNotificationSent: false,
       isEmailNotificationSent: false,
       creationDate: new Date().toISOString()
@@ -462,6 +575,11 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   // Complete a fulfill request
   const completeFulfillRequest = (requestId: string) => {
     setFulfillRequests(prev => prev.filter(r => r.id !== requestId));
+  };
+
+  // Complete a nomination - removes it from the list
+  const completeNomination = (nominationId: string) => {
+    setNominations(prev => prev.filter(nomination => nomination.id !== nominationId));
   };
 
   // Add a custom responsible person
@@ -685,6 +803,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         addCustomResponsiblePerson,
         addWeeklyNudge,
         completeOnboardingContact,
+        completeNomination,
         updateRequest,
         deleteRequest,
         updateFulfillRequest,
