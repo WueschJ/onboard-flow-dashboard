@@ -34,7 +34,7 @@ type DashboardContextType = {
   deleteNewsItem: (newsId: string) => void;
   addNewRequest: (request: Omit<RequestItem, 'id' | 'isFulfilled' | 'responsiblePersons'>) => void;
   addNewJoiner: (joiner: Omit<JoinerItem, 'id' | 'isInAppNotificationSent' | 'isEmailNotificationSent' | 'creationDate'>) => void;
-  addNomination: (nomination: Omit<NominationItem, 'id' | 'isCompleted' | 'creationDate'>, responsiblePersonId?: string) => void;
+  addNomination: (nomination: Omit<NominationItem, 'id' | 'isInAppNotificationSent' | 'isEmailNotificationSent' | 'creationDate'>) => void;
   addMotiusAsk: (ask: Omit<RequestItem, 'id' | 'isFulfilled' | 'responsiblePersons'>) => void;
   addOnboardingContact: (contact: Omit<OnboardingContact, 'id' | 'isCompleted'>, responsiblePersonId?: string) => void;
   assignResponsibleToRequest: (requestId: string, personId: string, isMotiusAsk?: boolean) => void;
@@ -50,7 +50,6 @@ type DashboardContextType = {
   addCustomResponsiblePerson: (name: string) => ResponsiblePerson;
   addWeeklyNudge: () => void;
   completeOnboardingContact: (contactId: string) => void;
-  completeNomination: (nominationId: string) => void;
   updateRequest: (request: RequestItem) => void;
   deleteRequest: (requestId: string) => void;
   updateFulfillRequest: (request: FulfillRequestItem) => void;
@@ -100,41 +99,6 @@ const initialResponsiblePersons: ResponsiblePerson[] = [
 // Sample color array for custom people
 const personColors = ['#3E7BFA', '#10B981', '#F59E0B', '#EC4899', '#8B5CF6', '#6366F1', '#D946EF', '#F43F5E'];
 
-// Local storage keys
-const STORAGE_KEYS = {
-  NEW_REQUESTS: 'dashboard_new_requests',
-  NEW_JOINERS: 'dashboard_new_joiners',
-  NOMINATIONS: 'dashboard_nominations',
-  MOTIUS_ASKS: 'dashboard_motius_asks',
-  ONBOARDING_LIST: 'dashboard_onboarding_list',
-  FULFILLED_REQUESTS: 'dashboard_fulfilled_requests',
-  RECENT_JOINERS: 'dashboard_recent_joiners',
-  REQUESTS_IN_PROCESS: 'dashboard_requests_in_process',
-  RESPONSIBLE_PERSONS: 'dashboard_responsible_persons',
-  WEEKLY_STATS: 'dashboard_weekly_stats',
-  TOTAL_REQUESTS_GRANTED: 'dashboard_total_requests_granted',
-  NEWS_ITEMS: 'dashboard_news_items'
-};
-
-// Load data from localStorage with fallback
-const loadFromStorage = <T>(key: string, fallback: T): T => {
-  try {
-    const stored = localStorage.getItem(key);
-    return stored ? JSON.parse(stored) : fallback;
-  } catch {
-    return fallback;
-  }
-};
-
-// Save data to localStorage
-const saveToStorage = <T>(key: string, data: T): void => {
-  try {
-    localStorage.setItem(key, JSON.stringify(data));
-  } catch {
-    // Handle storage errors silently
-  }
-};
-
 // Sample data for initial state
 const initialNewRequests: RequestItem[] = [
   {
@@ -176,7 +140,7 @@ const initialNewJoiners: JoinerItem[] = [
     email: 'lisa.chen@globaltech.com',
     isInAppNotificationSent: false,
     isEmailNotificationSent: false,
-    creationDate: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString()
+    creationDate: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString() // 4 days ago
   }
 ];
 
@@ -206,100 +170,28 @@ const initialNominations: NominationItem[] = [
     id: '1',
     name: 'Alex Johnson',
     company: 'Tech Innovations',
-    isCompleted: false,
+    email: 'alex.johnson@techinnovations.com',
+    isInAppNotificationSent: false,
+    isEmailNotificationSent: false,
     creationDate: new Date().toISOString()
   }
 ];
 
 export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Load data from localStorage with fallback
-  const [newRequests, setNewRequests] = useState<RequestItem[]>(() => 
-    loadFromStorage(STORAGE_KEYS.NEW_REQUESTS, initialNewRequests)
-  );
-  const [requestsInProcess, setRequestsInProcess] = useState<RequestItem[]>(() => 
-    loadFromStorage(STORAGE_KEYS.REQUESTS_IN_PROCESS, [])
-  );
-  const [newJoiners, setNewJoiners] = useState<JoinerItem[]>(() => 
-    loadFromStorage(STORAGE_KEYS.NEW_JOINERS, initialNewJoiners)
-  );
-  const [nominations, setNominations] = useState<NominationItem[]>(() => 
-    loadFromStorage(STORAGE_KEYS.NOMINATIONS, initialNominations)
-  );
+  const [newRequests, setNewRequests] = useState<RequestItem[]>(initialNewRequests);
+  const [requestsInProcess, setRequestsInProcess] = useState<RequestItem[]>([]);
+  const [newJoiners, setNewJoiners] = useState<JoinerItem[]>(initialNewJoiners);
+  const [nominations, setNominations] = useState<NominationItem[]>(initialNominations);
   const [fulfillRequests, setFulfillRequests] = useState<FulfillRequestItem[]>([]);
-  const [motiusAsks, setMotiusAsks] = useState<RequestItem[]>(() => 
-    loadFromStorage(STORAGE_KEYS.MOTIUS_ASKS, initialMotiusAsks)
-  );
-  const [onboardingList, setOnboardingList] = useState<OnboardingContact[]>(() => 
-    loadFromStorage(STORAGE_KEYS.ONBOARDING_LIST, [])
-  );
-  const [fulfilledRequests, setFulfilledRequests] = useState<RequestItem[]>(() => 
-    loadFromStorage(STORAGE_KEYS.FULFILLED_REQUESTS, [])
-  );
-  const [recentJoiners, setRecentJoiners] = useState<JoinerItem[]>(() => 
-    loadFromStorage(STORAGE_KEYS.RECENT_JOINERS, [])
-  );
-  const [responsiblePersons, setResponsiblePersons] = useState<ResponsiblePerson[]>(() => 
-    loadFromStorage(STORAGE_KEYS.RESPONSIBLE_PERSONS, initialResponsiblePersons)
-  );
+  const [motiusAsks, setMotiusAsks] = useState<RequestItem[]>(initialMotiusAsks);
+  const [onboardingList, setOnboardingList] = useState<OnboardingContact[]>([]);
+  const [fulfilledRequests, setFulfilledRequests] = useState<RequestItem[]>([]);
+  const [recentJoiners, setRecentJoiners] = useState<JoinerItem[]>([]);
+  const [responsiblePersons, setResponsiblePersons] = useState<ResponsiblePerson[]>(initialResponsiblePersons);
   const [weeklyNudges, setWeeklyNudges] = useState<WeeklyNudge[]>(initialWeeklyNudges);
-  const [weeklyStats, setWeeklyStats] = useState(() => 
-    loadFromStorage(STORAGE_KEYS.WEEKLY_STATS, { newRequests: 0, newJoiners: 0, requestsGranted: 0 })
-  );
-  const [totalRequestsGranted, setTotalRequestsGranted] = useState(() => 
-    loadFromStorage(STORAGE_KEYS.TOTAL_REQUESTS_GRANTED, 0)
-  );
-  const [newsItems, setNewsItems] = useState<NewsItem[]>(() => 
-    loadFromStorage(STORAGE_KEYS.NEWS_ITEMS, [])
-  );
-
-  // Save to localStorage whenever state changes
-  useEffect(() => {
-    saveToStorage(STORAGE_KEYS.NEW_REQUESTS, newRequests);
-  }, [newRequests]);
-
-  useEffect(() => {
-    saveToStorage(STORAGE_KEYS.REQUESTS_IN_PROCESS, requestsInProcess);
-  }, [requestsInProcess]);
-
-  useEffect(() => {
-    saveToStorage(STORAGE_KEYS.NEW_JOINERS, newJoiners);
-  }, [newJoiners]);
-
-  useEffect(() => {
-    saveToStorage(STORAGE_KEYS.NOMINATIONS, nominations);
-  }, [nominations]);
-
-  useEffect(() => {
-    saveToStorage(STORAGE_KEYS.MOTIUS_ASKS, motiusAsks);
-  }, [motiusAsks]);
-
-  useEffect(() => {
-    saveToStorage(STORAGE_KEYS.ONBOARDING_LIST, onboardingList);
-  }, [onboardingList]);
-
-  useEffect(() => {
-    saveToStorage(STORAGE_KEYS.FULFILLED_REQUESTS, fulfilledRequests);
-  }, [fulfilledRequests]);
-
-  useEffect(() => {
-    saveToStorage(STORAGE_KEYS.RECENT_JOINERS, recentJoiners);
-  }, [recentJoiners]);
-
-  useEffect(() => {
-    saveToStorage(STORAGE_KEYS.RESPONSIBLE_PERSONS, responsiblePersons);
-  }, [responsiblePersons]);
-
-  useEffect(() => {
-    saveToStorage(STORAGE_KEYS.WEEKLY_STATS, weeklyStats);
-  }, [weeklyStats]);
-
-  useEffect(() => {
-    saveToStorage(STORAGE_KEYS.TOTAL_REQUESTS_GRANTED, totalRequestsGranted);
-  }, [totalRequestsGranted]);
-
-  useEffect(() => {
-    saveToStorage(STORAGE_KEYS.NEWS_ITEMS, newsItems);
-  }, [newsItems]);
+  const [weeklyStats, setWeeklyStats] = useState({ newRequests: 0, newJoiners: 0, requestsGranted: 0 });
+  const [totalRequestsGranted, setTotalRequestsGranted] = useState(0);
+  const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
 
   // Generate Fulfill Requests based on New Requests and Requests in Process
   useEffect(() => {
@@ -331,6 +223,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     };
     setNewRequests(prev => [...prev, newRequest]);
     
+    // Update weekly stats
     setWeeklyStats(prev => ({ ...prev, newRequests: prev.newRequests + 1 }));
   };
 
@@ -345,30 +238,20 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     };
     setNewJoiners(prev => [...prev, newJoiner]);
     
+    // Update weekly stats
     setWeeklyStats(prev => ({ ...prev, newJoiners: prev.newJoiners + 1 }));
   };
 
   // Add a nomination
-  const addNomination = (nomination: Omit<NominationItem, 'id' | 'isCompleted' | 'creationDate'>, responsiblePersonId?: string) => {
-    let responsiblePerson: ResponsiblePerson | undefined;
-    
-    if (responsiblePersonId) {
-      responsiblePerson = responsiblePersons.find(p => p.id === responsiblePersonId);
-    }
-    
+  const addNomination = (nomination: Omit<NominationItem, 'id' | 'isInAppNotificationSent' | 'isEmailNotificationSent' | 'creationDate'>) => {
     const newNomination: NominationItem = {
       id: Date.now().toString(),
       ...nomination,
-      responsiblePerson,
-      isCompleted: false,
+      isInAppNotificationSent: false,
+      isEmailNotificationSent: false,
       creationDate: new Date().toISOString()
     };
     setNominations(prev => [...prev, newNomination]);
-  };
-
-  // Complete a nomination
-  const completeNomination = (nominationId: string) => {
-    setNominations(prev => prev.filter(nomination => nomination.id !== nominationId));
   };
 
   // Add a Motius ask
@@ -404,6 +287,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const person = responsiblePersons.find(p => p.id === personId);
     if (!person) return;
 
+    // Find if the request is in newRequests, requestsInProcess, or motiusAsks
     let requestFound = isMotiusAsk 
       ? motiusAsks.find(r => r.id === requestId) 
       : newRequests.find(r => r.id === requestId);
@@ -417,22 +301,30 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     if (!requestFound) return;
     
+    // Don't add if already assigned
     if (requestFound.responsiblePersons.some(p => p.id === person.id)) {
       return;
     }
 
     const updatedRequestWithPerson = {
       ...requestFound,
-      responsiblePersons: [...requestFound.responsiblePersons, person].slice(0, 2)
+      responsiblePersons: [...requestFound.responsiblePersons, person].slice(0, 2) // Max 2 responsible persons
     };
 
     if (sourceCollection === 'motiusAsks') {
+      // Remove from motius asks
       setMotiusAsks(prev => prev.filter(r => r.id !== requestId));
+      
+      // Add to requests in process
       setRequestsInProcess(prev => [...prev, updatedRequestWithPerson]);
     } else if (sourceCollection === 'newRequests') {
+      // Remove from new requests
       setNewRequests(prev => prev.filter(r => r.id !== requestId));
+      
+      // Add to requests in process
       setRequestsInProcess(prev => [...prev, updatedRequestWithPerson]);
     } else {
+      // Update in requests in process
       setRequestsInProcess(prev => prev.map(r => 
         r.id === requestId ? updatedRequestWithPerson : r
       ));
@@ -441,6 +333,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // Remove a responsible person from a request
   const removeResponsibleFromRequest = (requestId: string, personId: string, isMotiusAsk: boolean = false) => {
+    // Only look in requestsInProcess since responsible persons are only in that list
     const request = requestsInProcess.find(r => r.id === requestId);
     if (!request) return;
 
@@ -449,15 +342,19 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       responsiblePersons: request.responsiblePersons.filter(p => p.id !== personId)
     };
 
+    // If no responsible persons left, move back to original collection
     if (updatedRequestWithoutPerson.responsiblePersons.length === 0) {
+      // Remove from requests in process
       setRequestsInProcess(prev => prev.filter(r => r.id !== requestId));
       
+      // Add back to original collection
       if (isMotiusAsk) {
         setMotiusAsks(prev => [...prev, updatedRequestWithoutPerson]);
       } else {
         setNewRequests(prev => [...prev, updatedRequestWithoutPerson]);
       }
     } else {
+      // Update in requests in process
       setRequestsInProcess(prev => prev.map(r => 
         r.id === requestId ? updatedRequestWithoutPerson : r
       ));
@@ -491,9 +388,13 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const request = requestsInProcess.find(r => r.id === requestId);
     if (!request) return;
 
+    // Move to fulfilled requests
     setFulfilledRequests(prev => [...prev, { ...request, isFulfilled: true }]);
+    
+    // Remove from requests in process
     setRequestsInProcess(prev => prev.filter(r => r.id !== requestId));
 
+    // Update tracking statistics
     setTotalRequestsGranted(prev => prev + 1);
     setWeeklyStats(prev => ({ ...prev, requestsGranted: prev.requestsGranted + 1 }));
   };
@@ -506,9 +407,12 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         joiner
     );
     
+    // Check if both notifications are sent
     const joiner = updatedJoiners.find(j => j.id === joinerId);
     if (joiner && joiner.isInAppNotificationSent && joiner.isEmailNotificationSent) {
+      // Move to recent joiners
       setRecentJoiners(prev => [...prev, joiner]);
+      // Remove from new joiners
       setNewJoiners(updatedJoiners.filter(j => j.id !== joinerId));
     } else {
       setNewJoiners(updatedJoiners);
@@ -523,9 +427,12 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         joiner
     );
     
+    // Check if both notifications are sent
     const joiner = updatedJoiners.find(j => j.id === joinerId);
     if (joiner && joiner.isInAppNotificationSent && joiner.isEmailNotificationSent) {
+      // Move to recent joiners
       setRecentJoiners(prev => [...prev, joiner]);
+      // Remove from new joiners
       setNewJoiners(updatedJoiners.filter(j => j.id !== joinerId));
     } else {
       setNewJoiners(updatedJoiners);
@@ -575,17 +482,20 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const currentWeek = getWeekNumber();
     const currentYear = new Date().getFullYear();
     
+    // Find if we have an entry for this week
     const existingWeek = weeklyNudges.find(nudge => 
       nudge.week === currentWeek && nudge.year === currentYear
     );
     
     if (existingWeek) {
+      // Update existing week count
       setWeeklyNudges(prev => prev.map(nudge => 
         nudge.week === currentWeek && nudge.year === currentYear
           ? { ...nudge, count: nudge.count + 1 }
           : nudge
       ));
     } else {
+      // Create new week entry
       setWeeklyNudges(prev => [...prev, {
         week: currentWeek,
         count: 1,
@@ -603,10 +513,12 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   // Update a request
   const updateRequest = (request: RequestItem) => {
     if (request.responsiblePersons.length > 0) {
+      // Update in requests in process
       setRequestsInProcess(prev => prev.map(r => 
         r.id === request.id ? request : r
       ));
     } else {
+      // Update in new requests or motius asks
       if (newRequests.some(r => r.id === request.id)) {
         setNewRequests(prev => prev.map(r => 
           r.id === request.id ? request : r
@@ -621,6 +533,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // Delete a request
   const deleteRequest = (requestId: string) => {
+    // Check which collection the request is in and delete from there
     if (newRequests.some(r => r.id === requestId)) {
       setNewRequests(prev => prev.filter(r => r.id !== requestId));
     } else if (requestsInProcess.some(r => r.id === requestId)) {
@@ -629,6 +542,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setMotiusAsks(prev => prev.filter(r => r.id !== requestId));
     }
 
+    // Also remove from fulfill requests if it exists there
     setFulfillRequests(prev => prev.filter(r => r.id !== requestId));
   };
 
@@ -673,7 +587,10 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const request = fulfilledRequests.find(r => r.id === requestId);
     if (!request) return;
 
+    // Remove from fulfilled requests
     setFulfilledRequests(prev => prev.filter(r => r.id !== requestId));
+
+    // Add back to requests in process
     setRequestsInProcess(prev => [...prev, { ...request, isFulfilled: false }]);
   };
 
@@ -682,7 +599,10 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const joiner = recentJoiners.find(j => j.id === joinerId);
     if (!joiner) return;
 
+    // Remove from recent joiners
     setRecentJoiners(prev => prev.filter(j => j.id !== joinerId));
+
+    // Add back to new joiners
     setNewJoiners(prev => [...prev, { ...joiner, isInAppNotificationSent: false, isEmailNotificationSent: false }]);
   };
 
@@ -765,7 +685,6 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         addCustomResponsiblePerson,
         addWeeklyNudge,
         completeOnboardingContact,
-        completeNomination,
         updateRequest,
         deleteRequest,
         updateFulfillRequest,

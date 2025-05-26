@@ -31,8 +31,10 @@ export type NominationItem = {
   id: string;
   name: string;
   company: string;
+  email: string;
   responsiblePerson?: ResponsiblePerson;
-  isCompleted: boolean;
+  isInAppNotificationSent: boolean;
+  isEmailNotificationSent: boolean;
   creationDate: string;
 };
 

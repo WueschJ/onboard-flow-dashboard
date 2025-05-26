@@ -10,13 +10,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { useDashboard } from '@/context/DashboardContext';
 
 interface AddNominationDialogProps {
@@ -30,23 +23,24 @@ const AddNominationDialog: React.FC<AddNominationDialogProps> = ({
 }) => {
   const [name, setName] = useState('');
   const [company, setCompany] = useState('');
-  const [responsiblePersonId, setResponsiblePersonId] = useState<string>('');
+  const [email, setEmail] = useState('');
   
-  const { addNomination, responsiblePersons } = useDashboard();
+  const { addNomination } = useDashboard();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (name && company) {
+    if (name && company && email) {
       addNomination({
         name,
-        company
-      }, responsiblePersonId || undefined);
+        company,
+        email
+      });
       
       // Reset form
       setName('');
       setCompany('');
-      setResponsiblePersonId('');
+      setEmail('');
       onOpenChange(false);
     }
   };
@@ -79,19 +73,15 @@ const AddNominationDialog: React.FC<AddNominationDialogProps> = ({
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="responsible-person">Responsible Person (Optional)</Label>
-            <Select onValueChange={setResponsiblePersonId} value={responsiblePersonId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select responsible person" />
-              </SelectTrigger>
-              <SelectContent>
-                {responsiblePersons.map((person) => (
-                  <SelectItem key={person.id} value={person.id}>
-                    {person.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter email"
+              required
+            />
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
