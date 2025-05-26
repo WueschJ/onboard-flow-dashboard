@@ -622,11 +622,6 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setOnboardingList(updatedOnboardingList);
   };
 
-  // Complete a nomination
-  const completeNomination = (nominationId: string) => {
-    setNominations(prev => prev.filter(nomination => nomination.id !== nominationId));
-  };
-
   // Update a request
   const updateRequest = (request: RequestItem) => {
     if (request.responsiblePersons.length > 0) {
