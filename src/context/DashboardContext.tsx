@@ -34,7 +34,7 @@ type DashboardContextType = {
   deleteNewsItem: (newsId: string) => void;
   addNewRequest: (request: Omit<RequestItem, 'id' | 'isFulfilled' | 'responsiblePersons'>) => void;
   addNewJoiner: (joiner: Omit<JoinerItem, 'id' | 'isInAppNotificationSent' | 'isEmailNotificationSent' | 'creationDate'>) => void;
-  addNomination: (nomination: Omit<NominationItem, 'id' | 'isCompleted' | 'creationDate'>) => void;
+  addNomination: (nomination: Omit<NominationItem, 'id' | 'isCompleted' | 'creationDate'>, responsiblePersonId?: string) => void;
   addMotiusAsk: (ask: Omit<RequestItem, 'id' | 'isFulfilled' | 'responsiblePersons'>) => void;
   addOnboardingContact: (contact: Omit<OnboardingContact, 'id' | 'isCompleted'>, responsiblePersonId?: string) => void;
   assignResponsibleToRequest: (requestId: string, personId: string, isMotiusAsk?: boolean) => void;
@@ -176,7 +176,7 @@ const initialNewJoiners: JoinerItem[] = [
     email: 'lisa.chen@globaltech.com',
     isInAppNotificationSent: false,
     isEmailNotificationSent: false,
-    creationDate: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString() // 4 days ago
+    creationDate: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString()
   }
 ];
 
@@ -331,7 +331,6 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     };
     setNewRequests(prev => [...prev, newRequest]);
     
-    // Update weekly stats
     setWeeklyStats(prev => ({ ...prev, newRequests: prev.newRequests + 1 }));
   };
 
@@ -346,15 +345,21 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     };
     setNewJoiners(prev => [...prev, newJoiner]);
     
-    // Update weekly stats
     setWeeklyStats(prev => ({ ...prev, newJoiners: prev.newJoiners + 1 }));
   };
 
   // Add a nomination
-  const addNomination = (nomination: Omit<NominationItem, 'id' | 'isCompleted' | 'creationDate'>) => {
+  const addNomination = (nomination: Omit<NominationItem, 'id' | 'isCompleted' | 'creationDate'>, responsiblePersonId?: string) => {
+    let responsiblePerson: ResponsiblePerson | undefined;
+    
+    if (responsiblePersonId) {
+      responsiblePerson = responsiblePersons.find(p => p.id === responsiblePersonId);
+    }
+    
     const newNomination: NominationItem = {
       id: Date.now().toString(),
       ...nomination,
+      responsiblePerson,
       isCompleted: false,
       creationDate: new Date().toISOString()
     };
@@ -399,7 +404,6 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const person = responsiblePersons.find(p => p.id === personId);
     if (!person) return;
 
-    // Find if the request is in newRequests, requestsInProcess, or motiusAsks
     let requestFound = isMotiusAsk 
       ? motiusAsks.find(r => r.id === requestId) 
       : newRequests.find(r => r.id === requestId);
@@ -413,30 +417,22 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     if (!requestFound) return;
     
-    // Don't add if already assigned
     if (requestFound.responsiblePersons.some(p => p.id === person.id)) {
       return;
     }
 
     const updatedRequestWithPerson = {
       ...requestFound,
-      responsiblePersons: [...requestFound.responsiblePersons, person].slice(0, 2) // Max 2 responsible persons
+      responsiblePersons: [...requestFound.responsiblePersons, person].slice(0, 2)
     };
 
     if (sourceCollection === 'motiusAsks') {
-      // Remove from motius asks
       setMotiusAsks(prev => prev.filter(r => r.id !== requestId));
-      
-      // Add to requests in process
       setRequestsInProcess(prev => [...prev, updatedRequestWithPerson]);
     } else if (sourceCollection === 'newRequests') {
-      // Remove from new requests
       setNewRequests(prev => prev.filter(r => r.id !== requestId));
-      
-      // Add to requests in process
       setRequestsInProcess(prev => [...prev, updatedRequestWithPerson]);
     } else {
-      // Update in requests in process
       setRequestsInProcess(prev => prev.map(r => 
         r.id === requestId ? updatedRequestWithPerson : r
       ));
@@ -445,7 +441,6 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // Remove a responsible person from a request
   const removeResponsibleFromRequest = (requestId: string, personId: string, isMotiusAsk: boolean = false) => {
-    // Only look in requestsInProcess since responsible persons are only in that list
     const request = requestsInProcess.find(r => r.id === requestId);
     if (!request) return;
 
@@ -454,19 +449,15 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       responsiblePersons: request.responsiblePersons.filter(p => p.id !== personId)
     };
 
-    // If no responsible persons left, move back to original collection
     if (updatedRequestWithoutPerson.responsiblePersons.length === 0) {
-      // Remove from requests in process
       setRequestsInProcess(prev => prev.filter(r => r.id !== requestId));
       
-      // Add back to original collection
       if (isMotiusAsk) {
         setMotiusAsks(prev => [...prev, updatedRequestWithoutPerson]);
       } else {
         setNewRequests(prev => [...prev, updatedRequestWithoutPerson]);
       }
     } else {
-      // Update in requests in process
       setRequestsInProcess(prev => prev.map(r => 
         r.id === requestId ? updatedRequestWithoutPerson : r
       ));
@@ -500,13 +491,9 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const request = requestsInProcess.find(r => r.id === requestId);
     if (!request) return;
 
-    // Move to fulfilled requests
     setFulfilledRequests(prev => [...prev, { ...request, isFulfilled: true }]);
-    
-    // Remove from requests in process
     setRequestsInProcess(prev => prev.filter(r => r.id !== requestId));
 
-    // Update tracking statistics
     setTotalRequestsGranted(prev => prev + 1);
     setWeeklyStats(prev => ({ ...prev, requestsGranted: prev.requestsGranted + 1 }));
   };
@@ -519,12 +506,9 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         joiner
     );
     
-    // Check if both notifications are sent
     const joiner = updatedJoiners.find(j => j.id === joinerId);
     if (joiner && joiner.isInAppNotificationSent && joiner.isEmailNotificationSent) {
-      // Move to recent joiners
       setRecentJoiners(prev => [...prev, joiner]);
-      // Remove from new joiners
       setNewJoiners(updatedJoiners.filter(j => j.id !== joinerId));
     } else {
       setNewJoiners(updatedJoiners);
@@ -539,12 +523,9 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         joiner
     );
     
-    // Check if both notifications are sent
     const joiner = updatedJoiners.find(j => j.id === joinerId);
     if (joiner && joiner.isInAppNotificationSent && joiner.isEmailNotificationSent) {
-      // Move to recent joiners
       setRecentJoiners(prev => [...prev, joiner]);
-      // Remove from new joiners
       setNewJoiners(updatedJoiners.filter(j => j.id !== joinerId));
     } else {
       setNewJoiners(updatedJoiners);
@@ -594,20 +575,17 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const currentWeek = getWeekNumber();
     const currentYear = new Date().getFullYear();
     
-    // Find if we have an entry for this week
     const existingWeek = weeklyNudges.find(nudge => 
       nudge.week === currentWeek && nudge.year === currentYear
     );
     
     if (existingWeek) {
-      // Update existing week count
       setWeeklyNudges(prev => prev.map(nudge => 
         nudge.week === currentWeek && nudge.year === currentYear
           ? { ...nudge, count: nudge.count + 1 }
           : nudge
       ));
     } else {
-      // Create new week entry
       setWeeklyNudges(prev => [...prev, {
         week: currentWeek,
         count: 1,
@@ -625,12 +603,10 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   // Update a request
   const updateRequest = (request: RequestItem) => {
     if (request.responsiblePersons.length > 0) {
-      // Update in requests in process
       setRequestsInProcess(prev => prev.map(r => 
         r.id === request.id ? request : r
       ));
     } else {
-      // Update in new requests or motius asks
       if (newRequests.some(r => r.id === request.id)) {
         setNewRequests(prev => prev.map(r => 
           r.id === request.id ? request : r
@@ -645,7 +621,6 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // Delete a request
   const deleteRequest = (requestId: string) => {
-    // Check which collection the request is in and delete from there
     if (newRequests.some(r => r.id === requestId)) {
       setNewRequests(prev => prev.filter(r => r.id !== requestId));
     } else if (requestsInProcess.some(r => r.id === requestId)) {
@@ -654,7 +629,6 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setMotiusAsks(prev => prev.filter(r => r.id !== requestId));
     }
 
-    // Also remove from fulfill requests if it exists there
     setFulfillRequests(prev => prev.filter(r => r.id !== requestId));
   };
 
@@ -699,10 +673,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const request = fulfilledRequests.find(r => r.id === requestId);
     if (!request) return;
 
-    // Remove from fulfilled requests
     setFulfilledRequests(prev => prev.filter(r => r.id !== requestId));
-
-    // Add back to requests in process
     setRequestsInProcess(prev => [...prev, { ...request, isFulfilled: false }]);
   };
 
@@ -711,10 +682,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const joiner = recentJoiners.find(j => j.id === joinerId);
     if (!joiner) return;
 
-    // Remove from recent joiners
     setRecentJoiners(prev => prev.filter(j => j.id !== joinerId));
-
-    // Add back to new joiners
     setNewJoiners(prev => [...prev, { ...joiner, isInAppNotificationSent: false, isEmailNotificationSent: false }]);
   };
 
