@@ -23,24 +23,21 @@ const AddNominationDialog: React.FC<AddNominationDialogProps> = ({
 }) => {
   const [name, setName] = useState('');
   const [company, setCompany] = useState('');
-  const [email, setEmail] = useState('');
   
   const { addNomination } = useDashboard();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (name && company && email) {
+    if (name && company) {
       addNomination({
         name,
-        company,
-        email
+        company
       });
       
       // Reset form
       setName('');
       setCompany('');
-      setEmail('');
       onOpenChange(false);
     }
   };
@@ -69,17 +66,6 @@ const AddNominationDialog: React.FC<AddNominationDialogProps> = ({
               value={company}
               onChange={(e) => setCompany(e.target.value)}
               placeholder="Enter company"
-              required
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter email"
               required
             />
           </div>

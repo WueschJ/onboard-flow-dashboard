@@ -34,7 +34,7 @@ type DashboardContextType = {
   deleteNewsItem: (newsId: string) => void;
   addNewRequest: (request: Omit<RequestItem, 'id' | 'isFulfilled' | 'responsiblePersons'>) => void;
   addNewJoiner: (joiner: Omit<JoinerItem, 'id' | 'isInAppNotificationSent' | 'isEmailNotificationSent' | 'creationDate'>) => void;
-  addNomination: (nomination: Omit<NominationItem, 'id' | 'isInAppNotificationSent' | 'isEmailNotificationSent' | 'creationDate'>) => void;
+  addNomination: (nomination: Omit<NominationItem, 'id' | 'isCompleted' | 'creationDate'>) => void;
   addMotiusAsk: (ask: Omit<RequestItem, 'id' | 'isFulfilled' | 'responsiblePersons'>) => void;
   addOnboardingContact: (contact: Omit<OnboardingContact, 'id' | 'isCompleted'>, responsiblePersonId?: string) => void;
   assignResponsibleToRequest: (requestId: string, personId: string, isMotiusAsk?: boolean) => void;
@@ -50,6 +50,7 @@ type DashboardContextType = {
   addCustomResponsiblePerson: (name: string) => ResponsiblePerson;
   addWeeklyNudge: () => void;
   completeOnboardingContact: (contactId: string) => void;
+  completeNomination: (nominationId: string) => void;
   updateRequest: (request: RequestItem) => void;
   deleteRequest: (requestId: string) => void;
   updateFulfillRequest: (request: FulfillRequestItem) => void;
@@ -98,6 +99,41 @@ const initialResponsiblePersons: ResponsiblePerson[] = [
 
 // Sample color array for custom people
 const personColors = ['#3E7BFA', '#10B981', '#F59E0B', '#EC4899', '#8B5CF6', '#6366F1', '#D946EF', '#F43F5E'];
+
+// Local storage keys
+const STORAGE_KEYS = {
+  NEW_REQUESTS: 'dashboard_new_requests',
+  NEW_JOINERS: 'dashboard_new_joiners',
+  NOMINATIONS: 'dashboard_nominations',
+  MOTIUS_ASKS: 'dashboard_motius_asks',
+  ONBOARDING_LIST: 'dashboard_onboarding_list',
+  FULFILLED_REQUESTS: 'dashboard_fulfilled_requests',
+  RECENT_JOINERS: 'dashboard_recent_joiners',
+  REQUESTS_IN_PROCESS: 'dashboard_requests_in_process',
+  RESPONSIBLE_PERSONS: 'dashboard_responsible_persons',
+  WEEKLY_STATS: 'dashboard_weekly_stats',
+  TOTAL_REQUESTS_GRANTED: 'dashboard_total_requests_granted',
+  NEWS_ITEMS: 'dashboard_news_items'
+};
+
+// Load data from localStorage with fallback
+const loadFromStorage = <T>(key: string, fallback: T): T => {
+  try {
+    const stored = localStorage.getItem(key);
+    return stored ? JSON.parse(stored) : fallback;
+  } catch {
+    return fallback;
+  }
+};
+
+// Save data to localStorage
+const saveToStorage = <T>(key: string, data: T): void => {
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch {
+    // Handle storage errors silently
+  }
+};
 
 // Sample data for initial state
 const initialNewRequests: RequestItem[] = [
@@ -170,28 +206,100 @@ const initialNominations: NominationItem[] = [
     id: '1',
     name: 'Alex Johnson',
     company: 'Tech Innovations',
-    email: 'alex.johnson@techinnovations.com',
-    isInAppNotificationSent: false,
-    isEmailNotificationSent: false,
+    isCompleted: false,
     creationDate: new Date().toISOString()
   }
 ];
 
 export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [newRequests, setNewRequests] = useState<RequestItem[]>(initialNewRequests);
-  const [requestsInProcess, setRequestsInProcess] = useState<RequestItem[]>([]);
-  const [newJoiners, setNewJoiners] = useState<JoinerItem[]>(initialNewJoiners);
-  const [nominations, setNominations] = useState<NominationItem[]>(initialNominations);
+  // Load data from localStorage with fallback
+  const [newRequests, setNewRequests] = useState<RequestItem[]>(() => 
+    loadFromStorage(STORAGE_KEYS.NEW_REQUESTS, initialNewRequests)
+  );
+  const [requestsInProcess, setRequestsInProcess] = useState<RequestItem[]>(() => 
+    loadFromStorage(STORAGE_KEYS.REQUESTS_IN_PROCESS, [])
+  );
+  const [newJoiners, setNewJoiners] = useState<JoinerItem[]>(() => 
+    loadFromStorage(STORAGE_KEYS.NEW_JOINERS, initialNewJoiners)
+  );
+  const [nominations, setNominations] = useState<NominationItem[]>(() => 
+    loadFromStorage(STORAGE_KEYS.NOMINATIONS, initialNominations)
+  );
   const [fulfillRequests, setFulfillRequests] = useState<FulfillRequestItem[]>([]);
-  const [motiusAsks, setMotiusAsks] = useState<RequestItem[]>(initialMotiusAsks);
-  const [onboardingList, setOnboardingList] = useState<OnboardingContact[]>([]);
-  const [fulfilledRequests, setFulfilledRequests] = useState<RequestItem[]>([]);
-  const [recentJoiners, setRecentJoiners] = useState<JoinerItem[]>([]);
-  const [responsiblePersons, setResponsiblePersons] = useState<ResponsiblePerson[]>(initialResponsiblePersons);
+  const [motiusAsks, setMotiusAsks] = useState<RequestItem[]>(() => 
+    loadFromStorage(STORAGE_KEYS.MOTIUS_ASKS, initialMotiusAsks)
+  );
+  const [onboardingList, setOnboardingList] = useState<OnboardingContact[]>(() => 
+    loadFromStorage(STORAGE_KEYS.ONBOARDING_LIST, [])
+  );
+  const [fulfilledRequests, setFulfilledRequests] = useState<RequestItem[]>(() => 
+    loadFromStorage(STORAGE_KEYS.FULFILLED_REQUESTS, [])
+  );
+  const [recentJoiners, setRecentJoiners] = useState<JoinerItem[]>(() => 
+    loadFromStorage(STORAGE_KEYS.RECENT_JOINERS, [])
+  );
+  const [responsiblePersons, setResponsiblePersons] = useState<ResponsiblePerson[]>(() => 
+    loadFromStorage(STORAGE_KEYS.RESPONSIBLE_PERSONS, initialResponsiblePersons)
+  );
   const [weeklyNudges, setWeeklyNudges] = useState<WeeklyNudge[]>(initialWeeklyNudges);
-  const [weeklyStats, setWeeklyStats] = useState({ newRequests: 0, newJoiners: 0, requestsGranted: 0 });
-  const [totalRequestsGranted, setTotalRequestsGranted] = useState(0);
-  const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
+  const [weeklyStats, setWeeklyStats] = useState(() => 
+    loadFromStorage(STORAGE_KEYS.WEEKLY_STATS, { newRequests: 0, newJoiners: 0, requestsGranted: 0 })
+  );
+  const [totalRequestsGranted, setTotalRequestsGranted] = useState(() => 
+    loadFromStorage(STORAGE_KEYS.TOTAL_REQUESTS_GRANTED, 0)
+  );
+  const [newsItems, setNewsItems] = useState<NewsItem[]>(() => 
+    loadFromStorage(STORAGE_KEYS.NEWS_ITEMS, [])
+  );
+
+  // Save to localStorage whenever state changes
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.NEW_REQUESTS, newRequests);
+  }, [newRequests]);
+
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.REQUESTS_IN_PROCESS, requestsInProcess);
+  }, [requestsInProcess]);
+
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.NEW_JOINERS, newJoiners);
+  }, [newJoiners]);
+
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.NOMINATIONS, nominations);
+  }, [nominations]);
+
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.MOTIUS_ASKS, motiusAsks);
+  }, [motiusAsks]);
+
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.ONBOARDING_LIST, onboardingList);
+  }, [onboardingList]);
+
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.FULFILLED_REQUESTS, fulfilledRequests);
+  }, [fulfilledRequests]);
+
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.RECENT_JOINERS, recentJoiners);
+  }, [recentJoiners]);
+
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.RESPONSIBLE_PERSONS, responsiblePersons);
+  }, [responsiblePersons]);
+
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.WEEKLY_STATS, weeklyStats);
+  }, [weeklyStats]);
+
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.TOTAL_REQUESTS_GRANTED, totalRequestsGranted);
+  }, [totalRequestsGranted]);
+
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.NEWS_ITEMS, newsItems);
+  }, [newsItems]);
 
   // Generate Fulfill Requests based on New Requests and Requests in Process
   useEffect(() => {
@@ -243,15 +351,19 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   // Add a nomination
-  const addNomination = (nomination: Omit<NominationItem, 'id' | 'isInAppNotificationSent' | 'isEmailNotificationSent' | 'creationDate'>) => {
+  const addNomination = (nomination: Omit<NominationItem, 'id' | 'isCompleted' | 'creationDate'>) => {
     const newNomination: NominationItem = {
       id: Date.now().toString(),
       ...nomination,
-      isInAppNotificationSent: false,
-      isEmailNotificationSent: false,
+      isCompleted: false,
       creationDate: new Date().toISOString()
     };
     setNominations(prev => [...prev, newNomination]);
+  };
+
+  // Complete a nomination
+  const completeNomination = (nominationId: string) => {
+    setNominations(prev => prev.filter(nomination => nomination.id !== nominationId));
   };
 
   // Add a Motius ask
@@ -510,6 +622,11 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setOnboardingList(updatedOnboardingList);
   };
 
+  // Complete a nomination
+  const completeNomination = (nominationId: string) => {
+    setNominations(prev => prev.filter(nomination => nomination.id !== nominationId));
+  };
+
   // Update a request
   const updateRequest = (request: RequestItem) => {
     if (request.responsiblePersons.length > 0) {
@@ -685,6 +802,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         addCustomResponsiblePerson,
         addWeeklyNudge,
         completeOnboardingContact,
+        completeNomination,
         updateRequest,
         deleteRequest,
         updateFulfillRequest,
