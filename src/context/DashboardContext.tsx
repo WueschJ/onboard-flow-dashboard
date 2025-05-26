@@ -2,6 +2,7 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 import { 
   RequestItem, 
   JoinerItem, 
+  NominationItem,
   FulfillRequestItem, 
   OnboardingContact,
   ResponsiblePerson,
@@ -13,6 +14,7 @@ type DashboardContextType = {
   newRequests: RequestItem[];
   requestsInProcess: RequestItem[];
   newJoiners: JoinerItem[];
+  nominations: NominationItem[];
   fulfillRequests: FulfillRequestItem[];
   motiusAsks: RequestItem[];
   onboardingList: OnboardingContact[];
@@ -32,14 +34,18 @@ type DashboardContextType = {
   deleteNewsItem: (newsId: string) => void;
   addNewRequest: (request: Omit<RequestItem, 'id' | 'isFulfilled' | 'responsiblePersons'>) => void;
   addNewJoiner: (joiner: Omit<JoinerItem, 'id' | 'isInAppNotificationSent' | 'isEmailNotificationSent' | 'creationDate'>) => void;
+  addNomination: (nomination: Omit<NominationItem, 'id' | 'isInAppNotificationSent' | 'isEmailNotificationSent' | 'creationDate'>) => void;
   addMotiusAsk: (ask: Omit<RequestItem, 'id' | 'isFulfilled' | 'responsiblePersons'>) => void;
   addOnboardingContact: (contact: Omit<OnboardingContact, 'id' | 'isCompleted'>, responsiblePersonId?: string) => void;
   assignResponsibleToRequest: (requestId: string, personId: string, isMotiusAsk?: boolean) => void;
   removeResponsibleFromRequest: (requestId: string, personId: string, isMotiusAsk?: boolean) => void;
   assignResponsibleToJoiner: (joinerId: string, personId: string) => void;
+  assignResponsibleToNomination: (nominationId: string, personId: string) => void;
   markRequestFulfilled: (requestId: string) => void;
   toggleJoinerInAppNotification: (joinerId: string) => void;
   toggleJoinerEmailNotification: (joinerId: string) => void;
+  toggleNominationInAppNotification: (nominationId: string) => void;
+  toggleNominationEmailNotification: (nominationId: string) => void;
   completeFulfillRequest: (requestId: string) => void;
   addCustomResponsiblePerson: (name: string) => ResponsiblePerson;
   addWeeklyNudge: () => void;
@@ -56,6 +62,8 @@ type DashboardContextType = {
   returnJoinerToBoard: (joinerId: string) => void;
   updateJoiner: (joiner: JoinerItem) => void;
   deleteJoiner: (joinerId: string) => void;
+  updateNomination: (nomination: NominationItem) => void;
+  deleteNomination: (nominationId: string) => void;
 };
 
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
@@ -157,10 +165,23 @@ const initialWeeklyNudges: WeeklyNudge[] = [
   }
 ];
 
+const initialNominations: NominationItem[] = [
+  {
+    id: '1',
+    name: 'Alex Johnson',
+    company: 'Tech Innovations',
+    email: 'alex.johnson@techinnovations.com',
+    isInAppNotificationSent: false,
+    isEmailNotificationSent: false,
+    creationDate: new Date().toISOString()
+  }
+];
+
 export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [newRequests, setNewRequests] = useState<RequestItem[]>(initialNewRequests);
   const [requestsInProcess, setRequestsInProcess] = useState<RequestItem[]>([]);
   const [newJoiners, setNewJoiners] = useState<JoinerItem[]>(initialNewJoiners);
+  const [nominations, setNominations] = useState<NominationItem[]>(initialNominations);
   const [fulfillRequests, setFulfillRequests] = useState<FulfillRequestItem[]>([]);
   const [motiusAsks, setMotiusAsks] = useState<RequestItem[]>(initialMotiusAsks);
   const [onboardingList, setOnboardingList] = useState<OnboardingContact[]>([]);
@@ -219,6 +240,18 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     
     // Update weekly stats
     setWeeklyStats(prev => ({ ...prev, newJoiners: prev.newJoiners + 1 }));
+  };
+
+  // Add a nomination
+  const addNomination = (nomination: Omit<NominationItem, 'id' | 'isInAppNotificationSent' | 'isEmailNotificationSent' | 'creationDate'>) => {
+    const newNomination: NominationItem = {
+      id: Date.now().toString(),
+      ...nomination,
+      isInAppNotificationSent: false,
+      isEmailNotificationSent: false,
+      creationDate: new Date().toISOString()
+    };
+    setNominations(prev => [...prev, newNomination]);
   };
 
   // Add a Motius ask
@@ -339,6 +372,17 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setNewJoiners(updatedJoiners);
   };
 
+  // Assign a responsible person to a nomination
+  const assignResponsibleToNomination = (nominationId: string, personId: string) => {
+    const person = responsiblePersons.find(p => p.id === personId);
+    if (!person) return;
+
+    const updatedNominations = nominations.map(nomination => 
+      nomination.id === nominationId ? { ...nomination, responsiblePerson: person } : nomination
+    );
+    setNominations(updatedNominations);
+  };
+
   // Mark a request as fulfilled
   const markRequestFulfilled = (requestId: string) => {
     const request = requestsInProcess.find(r => r.id === requestId);
@@ -393,6 +437,26 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     } else {
       setNewJoiners(updatedJoiners);
     }
+  };
+
+  // Toggle in-app notification status for a nomination
+  const toggleNominationInAppNotification = (nominationId: string) => {
+    const updatedNominations = nominations.map(nomination => 
+      nomination.id === nominationId ? 
+        { ...nomination, isInAppNotificationSent: !nomination.isInAppNotificationSent } : 
+        nomination
+    );
+    setNominations(updatedNominations);
+  };
+
+  // Toggle email notification status for a nomination
+  const toggleNominationEmailNotification = (nominationId: string) => {
+    const updatedNominations = nominations.map(nomination => 
+      nomination.id === nominationId ? 
+        { ...nomination, isEmailNotificationSent: !nomination.isEmailNotificationSent } : 
+        nomination
+    );
+    setNominations(updatedNominations);
   };
 
   // Complete a fulfill request
@@ -552,6 +616,16 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setNewJoiners(prev => prev.filter(j => j.id !== joinerId));
   };
 
+  // Update a nomination
+  const updateNomination = (updatedNomination: NominationItem) => {
+    setNominations(prev => prev.map(n => n.id === updatedNomination.id ? updatedNomination : n));
+  };
+  
+  // Delete a nomination
+  const deleteNomination = (nominationId: string) => {
+    setNominations(prev => prev.filter(n => n.id !== nominationId));
+  };
+
   // Add a news item
   const addNewsItem = (news: Omit<NewsItem, 'id'>) => {
     const newItem: NewsItem = {
@@ -579,6 +653,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         newRequests,
         requestsInProcess,
         newJoiners,
+        nominations,
         fulfillRequests,
         motiusAsks,
         onboardingList,
@@ -594,14 +669,18 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         deleteNewsItem,
         addNewRequest,
         addNewJoiner,
+        addNomination,
         addMotiusAsk,
         addOnboardingContact,
         assignResponsibleToRequest,
         removeResponsibleFromRequest,
         assignResponsibleToJoiner,
+        assignResponsibleToNomination,
         markRequestFulfilled,
         toggleJoinerInAppNotification,
         toggleJoinerEmailNotification,
+        toggleNominationInAppNotification,
+        toggleNominationEmailNotification,
         completeFulfillRequest,
         addCustomResponsiblePerson,
         addWeeklyNudge,
@@ -617,7 +696,9 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         returnRequestToProcess,
         returnJoinerToBoard,
         updateJoiner,
-        deleteJoiner
+        deleteJoiner,
+        updateNomination,
+        deleteNomination
       }}
     >
       {children}

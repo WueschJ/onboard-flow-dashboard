@@ -27,6 +27,17 @@ export type JoinerItem = {
   creationDate: string;
 };
 
+export type NominationItem = {
+  id: string;
+  name: string;
+  company: string;
+  email: string;
+  responsiblePerson?: ResponsiblePerson;
+  isInAppNotificationSent: boolean;
+  isEmailNotificationSent: boolean;
+  creationDate: string;
+};
+
 export type FulfillRequestItem = {
   id: string;
   name: string;
