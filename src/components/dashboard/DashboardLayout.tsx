@@ -3,6 +3,7 @@ import React from 'react';
 import KanbanBoard from './KanbanBoard';
 import AdditionalSections from './AdditionalSections';
 import NewsSection from './NewsSection';
+import PriorityNudgingSection from './PriorityNudgingSection';
 import ProgressTrackers from './ProgressTrackers';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
@@ -55,7 +56,11 @@ const DashboardLayout: React.FC = () => {
           <ProgressTrackers />
           <KanbanBoard />
           <AdditionalSections />
-          <NewsSection />
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <NewsSection />
+            <PriorityNudgingSection />
+          </div>
         </div>
       </div>
     </div>

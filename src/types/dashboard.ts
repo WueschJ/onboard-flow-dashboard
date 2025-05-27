@@ -31,7 +31,6 @@ export type NominationItem = {
   id: string;
   name: string;
   company: string;
-  email: string;
   responsiblePerson?: ResponsiblePerson;
   isInAppNotificationSent: boolean;
   isEmailNotificationSent: boolean;
@@ -53,6 +52,14 @@ export type OnboardingContact = {
   company: string;
   responsiblePerson?: ResponsiblePerson;
   isCompleted: boolean;
+};
+
+export type PriorityNudgingItem = {
+  id: string;
+  name: string;
+  responsiblePerson?: ResponsiblePerson;
+  email?: string;
+  creationDate: string;
 };
 
 export type WeeklyNudge = {

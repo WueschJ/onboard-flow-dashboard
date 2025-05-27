@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { 
   RequestItem, 
@@ -8,7 +7,8 @@ import {
   OnboardingContact,
   ResponsiblePerson,
   WeeklyNudge,
-  NewsItem
+  NewsItem,
+  PriorityNudgingItem
 } from '../types/dashboard';
 
 type DashboardContextType = {
@@ -30,9 +30,11 @@ type DashboardContextType = {
   };
   totalRequestsGranted: number;
   newsItems: NewsItem[];
+  priorityNudgingItems: PriorityNudgingItem[];
   addNewsItem: (news: Omit<NewsItem, 'id'>) => void;
   updateNewsItem: (news: NewsItem) => void;
   deleteNewsItem: (newsId: string) => void;
+  addPriorityNudgingItem: (item: Omit<PriorityNudgingItem, 'id' | 'creationDate'>, responsiblePersonId?: string) => void;
   addNewRequest: (request: Omit<RequestItem, 'id' | 'isFulfilled' | 'responsiblePersons'>) => void;
   addNewJoiner: (joiner: Omit<JoinerItem, 'id' | 'isInAppNotificationSent' | 'isEmailNotificationSent' | 'creationDate'>) => void;
   addNomination: (nomination: Omit<NominationItem, 'id' | 'isInAppNotificationSent' | 'isEmailNotificationSent' | 'creationDate'>, responsiblePersonId?: string) => void;
@@ -241,6 +243,9 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [newsItems, setNewsItems] = useState<NewsItem[]>(() => 
     loadFromStorage('newsItems', [])
   );
+  const [priorityNudgingItems, setPriorityNudgingItems] = useState<PriorityNudgingItem[]>(() => 
+    loadFromStorage('priorityNudgingItems', [])
+  );
 
   // Save to localStorage whenever state changes
   useEffect(() => {
@@ -298,6 +303,10 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   useEffect(() => {
     saveToStorage('newsItems', newsItems);
   }, [newsItems]);
+
+  useEffect(() => {
+    saveToStorage('priorityNudgingItems', priorityNudgingItems);
+  }, [priorityNudgingItems]);
 
   // Generate Fulfill Requests based on New Requests and Requests in Process
   useEffect(() => {
@@ -622,6 +631,23 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
+  // Add a Priority Nudging item
+  const addPriorityNudgingItem = (item: Omit<PriorityNudgingItem, 'id' | 'creationDate'>, responsiblePersonId?: string) => {
+    let responsiblePerson: ResponsiblePerson | undefined;
+    
+    if (responsiblePersonId) {
+      responsiblePerson = responsiblePersons.find(p => p.id === responsiblePersonId);
+    }
+    
+    const newItem: PriorityNudgingItem = {
+      id: Date.now().toString(),
+      ...item,
+      responsiblePerson,
+      creationDate: new Date().toISOString()
+    };
+    setPriorityNudgingItems(prev => [...prev, newItem]);
+  };
+
   // Complete an onboarding contact
   const completeOnboardingContact = (contactId: string) => {
     const updatedOnboardingList = onboardingList.filter(contact => contact.id !== contactId);
@@ -782,9 +808,11 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         weeklyStats,
         totalRequestsGranted,
         newsItems,
+        priorityNudgingItems,
         addNewsItem,
         updateNewsItem,
         deleteNewsItem,
+        addPriorityNudgingItem,
         addNewRequest,
         addNewJoiner,
         addNomination,
