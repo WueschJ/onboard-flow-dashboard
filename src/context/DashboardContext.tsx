@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { 
   RequestItem, 
@@ -8,7 +7,8 @@ import {
   OnboardingContact,
   ResponsiblePerson,
   WeeklyNudge,
-  NewsItem
+  NewsItem,
+  CustomSectionItem
 } from '../types/dashboard';
 
 type DashboardContextType = {
@@ -30,9 +30,13 @@ type DashboardContextType = {
   };
   totalRequestsGranted: number;
   newsItems: NewsItem[];
+  customSectionItems: CustomSectionItem[];
   addNewsItem: (news: Omit<NewsItem, 'id'>) => void;
   updateNewsItem: (news: NewsItem) => void;
   deleteNewsItem: (newsId: string) => void;
+  addCustomSectionItem: (item: Omit<CustomSectionItem, 'id'>, responsiblePersonId?: string) => void;
+  updateCustomSectionItem: (item: CustomSectionItem) => void;
+  deleteCustomSectionItem: (itemId: string) => void;
   addNewRequest: (request: Omit<RequestItem, 'id' | 'isFulfilled' | 'responsiblePersons'>) => void;
   addNewJoiner: (joiner: Omit<JoinerItem, 'id' | 'isInAppNotificationSent' | 'isEmailNotificationSent' | 'creationDate'>) => void;
   addNomination: (nomination: Omit<NominationItem, 'id' | 'isInAppNotificationSent' | 'isEmailNotificationSent' | 'creationDate'>, responsiblePersonId?: string) => void;
@@ -241,6 +245,9 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [newsItems, setNewsItems] = useState<NewsItem[]>(() => 
     loadFromStorage('newsItems', [])
   );
+  const [customSectionItems, setCustomSectionItems] = useState<CustomSectionItem[]>(() => 
+    loadFromStorage('customSectionItems', [])
+  );
 
   // Save to localStorage whenever state changes
   useEffect(() => {
@@ -298,6 +305,10 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   useEffect(() => {
     saveToStorage('newsItems', newsItems);
   }, [newsItems]);
+
+  useEffect(() => {
+    saveToStorage('customSectionItems', customSectionItems);
+  }, [customSectionItems]);
 
   // Generate Fulfill Requests based on New Requests and Requests in Process
   useEffect(() => {
@@ -595,6 +606,55 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return newPerson;
   };
 
+  // Add a custom section item
+  const addCustomSectionItem = (item: Omit<CustomSectionItem, 'id'>, responsiblePersonId?: string) => {
+    let responsiblePerson: ResponsiblePerson | undefined;
+    
+    if (responsiblePersonId) {
+      responsiblePerson = responsiblePersons.find(p => p.id === responsiblePersonId);
+    }
+    
+    const newItem: CustomSectionItem = {
+      id: Date.now().toString(),
+      ...item,
+      responsiblePerson
+    };
+    setCustomSectionItems(prev => [...prev, newItem]);
+  };
+
+  // Update a custom section item
+  const updateCustomSectionItem = (item: CustomSectionItem) => {
+    setCustomSectionItems(prev => prev.map(i => 
+      i.id === item.id ? item : i
+    ));
+  };
+
+  // Delete a custom section item
+  const deleteCustomSectionItem = (itemId: string) => {
+    setCustomSectionItems(prev => prev.filter(i => i.id !== itemId));
+  };
+
+  // Add a news item
+  const addNewsItem = (news: Omit<NewsItem, 'id'>) => {
+    const newItem: NewsItem = {
+      id: Date.now().toString(),
+      ...news
+    };
+    setNewsItems(prev => [...prev, newItem]);
+  };
+
+  // Update a news item
+  const updateNewsItem = (news: NewsItem) => {
+    setNewsItems(prev => prev.map(item => 
+      item.id === news.id ? news : item
+    ));
+  };
+
+  // Delete a news item
+  const deleteNewsItem = (newsId: string) => {
+    setNewsItems(prev => prev.filter(item => item.id !== newsId));
+  };
+
   // Add a weekly nudge
   const addWeeklyNudge = () => {
     const currentWeek = getWeekNumber();
@@ -744,30 +804,13 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setNominations(prev => prev.filter(n => n.id !== nominationId));
   };
 
-  // Add a news item
-  const addNewsItem = (news: Omit<NewsItem, 'id'>) => {
-    const newItem: NewsItem = {
-      id: Date.now().toString(),
-      ...news
-    };
-    setNewsItems(prev => [...prev, newItem]);
-  };
-
-  // Update a news item
-  const updateNewsItem = (news: NewsItem) => {
-    setNewsItems(prev => prev.map(item => 
-      item.id === news.id ? news : item
-    ));
-  };
-
-  // Delete a news item
-  const deleteNewsItem = (newsId: string) => {
-    setNewsItems(prev => prev.filter(item => item.id !== newsId));
-  };
-
   return (
     <DashboardContext.Provider
       value={{
+        customSectionItems,
+        addCustomSectionItem,
+        updateCustomSectionItem,
+        deleteCustomSectionItem,
         newRequests,
         requestsInProcess,
         newJoiners,

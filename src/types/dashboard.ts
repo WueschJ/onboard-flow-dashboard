@@ -46,6 +46,14 @@ export type FulfillRequestItem = {
   isCompleted: boolean;
 };
 
+export type CustomSectionItem = {
+  id: string;
+  name: string;
+  responsiblePerson?: ResponsiblePerson;
+  email?: string;
+  note: string;
+};
+
 export type OnboardingContact = {
   id: string;
   name: string;
