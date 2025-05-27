@@ -40,8 +40,7 @@ const AddNominationDialog: React.FC<AddNominationDialogProps> = ({
     if (name && company) {
       addNomination({
         name,
-        company,
-        email: '' // Keep email as empty string to match the type
+        company
       }, responsiblePersonId || undefined);
       
       // Reset form

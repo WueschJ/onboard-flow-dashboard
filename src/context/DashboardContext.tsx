@@ -193,7 +193,6 @@ const initialNominations: NominationItem[] = [
     id: '1',
     name: 'Alex Johnson',
     company: 'Tech Innovations',
-    email: 'alex.johnson@techinnovations.com',
     isInAppNotificationSent: false,
     isEmailNotificationSent: false,
     creationDate: new Date().toISOString()
