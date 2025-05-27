@@ -1,4 +1,3 @@
-
 export type ResponsiblePerson = {
   id: string;
   name: string;
@@ -59,6 +58,7 @@ export type PriorityNudgingItem = {
   name: string;
   responsiblePerson?: ResponsiblePerson;
   email?: string;
+  note?: string;
   creationDate: string;
 };
 

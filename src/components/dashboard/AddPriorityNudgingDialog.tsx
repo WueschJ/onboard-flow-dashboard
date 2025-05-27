@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useDashboard } from '@/context/DashboardContext';
 import { useToast } from '@/hooks/use-toast';
@@ -19,6 +20,7 @@ const AddPriorityNudgingDialog: React.FC<AddPriorityNudgingDialogProps> = ({
 }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [note, setNote] = useState('');
   const [selectedPersonId, setSelectedPersonId] = useState<string>('');
   
   const { addPriorityNudgingItem, responsiblePersons, addCustomResponsiblePerson } = useDashboard();
@@ -40,6 +42,7 @@ const AddPriorityNudgingDialog: React.FC<AddPriorityNudgingDialogProps> = ({
     addPriorityNudgingItem({
       name: name.trim(),
       email: email.trim() || undefined,
+      note: note.trim() || undefined,
     }, selectedPersonId || undefined);
 
     toast({
@@ -51,6 +54,7 @@ const AddPriorityNudgingDialog: React.FC<AddPriorityNudgingDialogProps> = ({
     // Reset form
     setName('');
     setEmail('');
+    setNote('');
     setSelectedPersonId('');
     onOpenChange(false);
   };
@@ -110,6 +114,17 @@ const AddPriorityNudgingDialog: React.FC<AddPriorityNudgingDialogProps> = ({
               placeholder="Enter email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="note">Note (Optional)</Label>
+            <Textarea
+              id="note"
+              placeholder="Enter note"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              rows={3}
             />
           </div>
 

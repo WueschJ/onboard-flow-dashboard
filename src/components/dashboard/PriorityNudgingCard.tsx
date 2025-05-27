@@ -3,7 +3,7 @@ import React from 'react';
 import { PriorityNudgingItem } from '@/types/dashboard';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Mail } from 'lucide-react';
+import { Mail, FileText } from 'lucide-react';
 
 interface PriorityNudgingCardProps {
   item: PriorityNudgingItem;
@@ -38,6 +38,13 @@ const PriorityNudgingCard: React.FC<PriorityNudgingCardProps> = ({ item }) => {
           <div className="flex items-center gap-1 text-xs text-gray-600">
             <Mail className="h-3 w-3" />
             <span className="truncate">{item.email}</span>
+          </div>
+        )}
+        
+        {item.note && (
+          <div className="flex items-start gap-1 text-xs text-gray-600">
+            <FileText className="h-3 w-3 mt-0.5 flex-shrink-0" />
+            <span className="line-clamp-2">{item.note}</span>
           </div>
         )}
         
