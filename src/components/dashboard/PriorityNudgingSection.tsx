@@ -10,7 +10,9 @@ const PriorityNudgingSection: React.FC = () => {
   const { priorityNudgingItems } = useDashboard();
   
   return (
-    <div>
+    <div className="mb-8">
+      <h2 className="text-2xl font-bold mb-4 text-dashboard-heading">Priority Nudging</h2>
+      
       <KanbanLane 
         title="Priority Nudging" 
         showAddButton 
