@@ -1,4 +1,3 @@
-
 import React from 'react';
 import KanbanBoard from './KanbanBoard';
 import AdditionalSections from './AdditionalSections';
@@ -54,10 +53,16 @@ const DashboardLayout: React.FC = () => {
           </div>
           
           <ProgressTrackers />
-          <KanbanBoard />
-          <AdditionalSections />
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div className="mt-12">
+            <KanbanBoard />
+          </div>
+          
+          <div className="mt-12">
+            <AdditionalSections />
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-12">
             <NewsSection />
             <PriorityNudgingSection />
           </div>
