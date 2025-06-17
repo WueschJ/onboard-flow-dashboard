@@ -15,11 +15,11 @@ const ProgressTrackers = () => {
   } = useDashboard();
 
   // Calculate progress percentages
-  const goalTotalRequests = 30;
+  const goalTotalRequests = 15;
   const goalWeeklyNudges = 10;
-  const goalWeeklyRequests = 3;
-  const goalWeeklyJoiners = 3;
-  const goalWeeklyRequestsGranted = 3;
+  const goalWeeklyAkquise = 3;
+  const goalWeeklyEngagement = 3;
+  const goalWeeklyMagicMoments = 3;
 
   const totalRequestsProgress = Math.min((totalRequestsGranted / goalTotalRequests) * 100, 100);
   
@@ -36,9 +36,9 @@ const ProgressTrackers = () => {
   const weeklyNudgesProgress = Math.min((currentWeekNudges / goalWeeklyNudges) * 100, 100);
   
   // Calculate weekly stats progress
-  const weeklyRequestsProgress = Math.min((weeklyStats.newRequests / goalWeeklyRequests) * 100, 100);
-  const weeklyJoinersProgress = Math.min((weeklyStats.newJoiners / goalWeeklyJoiners) * 100, 100);
-  const weeklyRequestsGrantedProgress = Math.min((weeklyStats.requestsGranted / goalWeeklyRequestsGranted) * 100, 100);
+  const weeklyAkquiseProgress = Math.min((weeklyStats.newRequests / goalWeeklyAkquise) * 100, 100);
+  const weeklyEngagementProgress = Math.min((weeklyStats.newJoiners / goalWeeklyEngagement) * 100, 100);
+  const weeklyMagicMomentsProgress = Math.min((weeklyStats.requestsGranted / goalWeeklyMagicMoments) * 100, 100);
 
   // Get previous weeks' nudges for historical display
   const previousWeeksNudges = weeklyNudges
@@ -62,7 +62,7 @@ const ProgressTrackers = () => {
             <span className="text-sm text-dashboard-blue font-bold">{totalRequestsGranted}/{goalTotalRequests}</span>
           </div>
           <Progress value={totalRequestsProgress} className="h-3 mb-1" variant="blue" />
-          <p className="text-xs text-gray-500 mt-2">Goal: {goalTotalRequests} by August 1, 2025</p>
+          <p className="text-xs text-gray-500 mt-2">Goal: {goalTotalRequests} by end of Sprint 1</p>
         </div>
         
         {/* Weekly Nudging Tracker - Using less prominent colors */}
@@ -108,26 +108,26 @@ const ProgressTrackers = () => {
           
           <div className="mb-2">
             <div className="flex justify-between items-center text-sm">
-              <span className="text-gray-600">New Requests</span>
-              <span className="text-dashboard-blue font-bold">{weeklyStats.newRequests}/{goalWeeklyRequests}</span>
+              <span className="text-gray-600">Akquise</span>
+              <span className="text-dashboard-blue font-bold">{weeklyStats.newRequests}/{goalWeeklyAkquise}</span>
             </div>
-            <Progress value={weeklyRequestsProgress} className="h-2 mb-1" variant="blue" />
+            <Progress value={weeklyAkquiseProgress} className="h-2 mb-1" variant="blue" />
           </div>
           
           <div className="mb-2">
             <div className="flex justify-between items-center text-sm">
-              <span className="text-gray-600">New Joiners</span>
-              <span className="text-green-600 font-bold">{weeklyStats.newJoiners}/{goalWeeklyJoiners}</span>
+              <span className="text-gray-600">Engagement</span>
+              <span className="text-green-600 font-bold">{weeklyStats.newJoiners}/{goalWeeklyEngagement}</span>
             </div>
-            <Progress value={weeklyJoinersProgress} className="h-2 mb-1" variant="green" />
+            <Progress value={weeklyEngagementProgress} className="h-2 mb-1" variant="green" />
           </div>
           
           <div>
             <div className="flex justify-between items-center text-sm">
-              <span className="text-gray-600">Requests Granted</span>
-              <span className="text-amber-600 font-bold">{weeklyStats.requestsGranted}/{goalWeeklyRequestsGranted}</span>
+              <span className="text-gray-600">Magic Moments</span>
+              <span className="text-amber-600 font-bold">{weeklyStats.requestsGranted}/{goalWeeklyMagicMoments}</span>
             </div>
-            <Progress value={weeklyRequestsGrantedProgress} className="h-2 mb-1" variant="amber" />
+            <Progress value={weeklyMagicMomentsProgress} className="h-2 mb-1" variant="amber" />
           </div>
           
           <p className="text-xs text-gray-500 mt-2">Resets every Monday</p>
