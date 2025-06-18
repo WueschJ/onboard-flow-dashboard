@@ -68,6 +68,9 @@ type DashboardContextType = {
   deleteJoiner: (joinerId: string) => void;
   updateNomination: (nomination: NominationItem) => void;
   deleteNomination: (nominationId: string) => void;
+  incrementWeeklyAkquise: () => void;
+  incrementWeeklyEngagement: () => void;
+  incrementWeeklyMagicMoments: () => void;
 };
 
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
@@ -790,6 +793,19 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setNewsItems(prev => prev.filter(item => item.id !== newsId));
   };
 
+  // Increment weekly stats manually
+  const incrementWeeklyAkquise = () => {
+    setWeeklyStats(prev => ({ ...prev, newRequests: prev.newRequests + 1 }));
+  };
+
+  const incrementWeeklyEngagement = () => {
+    setWeeklyStats(prev => ({ ...prev, newJoiners: prev.newJoiners + 1 }));
+  };
+
+  const incrementWeeklyMagicMoments = () => {
+    setWeeklyStats(prev => ({ ...prev, requestsGranted: prev.requestsGranted + 1 }));
+  };
+
   return (
     <DashboardContext.Provider
       value={{
@@ -844,7 +860,10 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         updateJoiner,
         deleteJoiner,
         updateNomination,
-        deleteNomination
+        deleteNomination,
+        incrementWeeklyAkquise,
+        incrementWeeklyEngagement,
+        incrementWeeklyMagicMoments
       }}
     >
       {children}

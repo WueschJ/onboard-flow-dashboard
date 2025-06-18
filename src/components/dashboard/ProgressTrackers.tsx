@@ -11,7 +11,10 @@ const ProgressTrackers = () => {
     totalRequestsGranted, 
     weeklyStats, 
     weeklyNudges,
-    addWeeklyNudge 
+    addWeeklyNudge,
+    incrementWeeklyAkquise,
+    incrementWeeklyEngagement,
+    incrementWeeklyMagicMoments
   } = useDashboard();
 
   // Calculate progress percentages
@@ -109,7 +112,17 @@ const ProgressTrackers = () => {
           <div className="mb-2">
             <div className="flex justify-between items-center text-sm">
               <span className="text-gray-600">Akquise</span>
-              <span className="text-dashboard-blue font-bold">{weeklyStats.newRequests}/{goalWeeklyAkquise}</span>
+              <div className="flex items-center gap-2">
+                <span className="text-dashboard-blue font-bold">{weeklyStats.newRequests}/{goalWeeklyAkquise}</span>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className="h-6 w-6 p-0 hover:bg-blue-50"
+                  onClick={incrementWeeklyAkquise}
+                >
+                  <Plus className="h-3 w-3 text-dashboard-blue" />
+                </Button>
+              </div>
             </div>
             <Progress value={weeklyAkquiseProgress} className="h-2 mb-1" variant="blue" />
           </div>
@@ -117,7 +130,17 @@ const ProgressTrackers = () => {
           <div className="mb-2">
             <div className="flex justify-between items-center text-sm">
               <span className="text-gray-600">Engagement</span>
-              <span className="text-green-600 font-bold">{weeklyStats.newJoiners}/{goalWeeklyEngagement}</span>
+              <div className="flex items-center gap-2">
+                <span className="text-green-600 font-bold">{weeklyStats.newJoiners}/{goalWeeklyEngagement}</span>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className="h-6 w-6 p-0 hover:bg-green-50"
+                  onClick={incrementWeeklyEngagement}
+                >
+                  <Plus className="h-3 w-3 text-green-600" />
+                </Button>
+              </div>
             </div>
             <Progress value={weeklyEngagementProgress} className="h-2 mb-1" variant="green" />
           </div>
@@ -125,7 +148,17 @@ const ProgressTrackers = () => {
           <div>
             <div className="flex justify-between items-center text-sm">
               <span className="text-gray-600">Magic Moments</span>
-              <span className="text-amber-600 font-bold">{weeklyStats.requestsGranted}/{goalWeeklyMagicMoments}</span>
+              <div className="flex items-center gap-2">
+                <span className="text-amber-600 font-bold">{weeklyStats.requestsGranted}/{goalWeeklyMagicMoments}</span>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className="h-6 w-6 p-0 hover:bg-amber-50"
+                  onClick={incrementWeeklyMagicMoments}
+                >
+                  <Plus className="h-3 w-3 text-amber-600" />
+                </Button>
+              </div>
             </div>
             <Progress value={weeklyMagicMomentsProgress} className="h-2 mb-1" variant="amber" />
           </div>
